@@ -41,6 +41,9 @@ pip install -r requirements.txt
 - Copy `config.yml.default` to `config.yml`
 - Edit the variants: `supported_variants` and time controls: `supported_tc` from the config.yml as necessary (use # to disable certain ones)
 
+### Heroku:
+- See [here](heroku/README.md)
+
 
 ## Lidraughts OAuth
 - Create an account for your bot on [Lidraughts.org](https://lidraughts.org/signup)
