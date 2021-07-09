@@ -8,7 +8,7 @@
 - NOTE: You won't see this token again on Lidraughts.
 - Move all the files from `./heroku` (except for README.md) to `.`
 - In `config.yml`, enter the binary name as the `engine.name` field (the engine should be for Linux)
-- In `startbot.sh`, replace `engine_name` with the binary name at line `chmod +x ./engines/engine_name`
+- In `startbot.sh`, delete `chmod +x ./engines/engine_name` if you are using a homemade engine else replace `engine_name` with the binary name at line `chmod +x ./engines/engine_name`
 - Edit the variants: `supported_variants` and time controls: `supported_tc` from the config.yml as necessary
 - Create a [new heroku app](https://dashboard.heroku.com/new-app).
 - Follow the steps on Deploy using Heroku Git
