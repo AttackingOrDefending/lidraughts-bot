@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 @backoff.on_exception(backoff.expo, BaseException, max_time=120)
-def create_engine(config):
+def create_engine(config, variant):
     cfg = config["engine"]
     engine_path = os.path.realpath(os.path.join(cfg["dir"], cfg["name"]))
     engine_type = cfg.get("protocol")
@@ -28,6 +28,7 @@ def create_engine(config):
         raise ValueError(
             f"    Invalid engine type: {engine_type}. Expected hub, or homemade.")
     options = cfg.get(engine_type + "_options", {}) or {}
+    options['variant'] = variant
     return Engine(commands, options, stderr)
 
 
@@ -102,20 +103,20 @@ class HubEngine(EngineWrapper):
         self.engine = hub_engine.Engine(commands)
         self.engine.uci()
 
-        if 'bb-size' in options:
-            if options['bb-size'] == 'auto':
-                if 'variant' not in options:  # Normal variant
-                    options['bb-size'] = 6
-                elif options['variant'] == 'normal':  # Normal variant
-                    options['bb-size'] = 6
-                elif options['variant'] == 'bt':  # Breakthrough variant
-                    options['bb-size'] = 7
-                elif options['variant'] == 'frisian':  # Frisian variant
-                    options['bb-size'] = 5
-                elif options['variant'] == 'losing':  # Losing variant
-                    options['bb-size'] = 5
-                elif options['variant'] == 'killer':  # Killer variant. Not in lidraughts
-                    options['bb-size'] = 6
+        if 'bb-size' in options and options['bb-size'] == 'auto':
+            if 'variant' in options and options['variant'] != 'normal':
+                variant = '_' + options['variant']
+            else:
+                variant = ''
+            for number in range(1, 7):
+                path = os.path.realpath(f"./data/bb{variant}/{number + 1}")
+                if not os.path.isdir(path):
+                    break
+            else:
+                number += 1
+            if number == 1:
+                number = 0
+            options['bb-size'] = number
 
         if options:
             for name in options:
