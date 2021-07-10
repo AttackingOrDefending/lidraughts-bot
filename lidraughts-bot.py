@@ -227,17 +227,8 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     # Initial response of stream will be the full game info. Store it
     initial_state = json.loads(next(lines).decode('utf-8'))
     game = model.Game(initial_state, user_profile["username"], li.baseUrl, config.get("abort_time", 20))
-    if game.variant_name.lower() == 'breakthrough':
-        config["engine"]['hub_options']['variant'] = 'bt'
-        engine = partial(engine_wrapper.create_engine, config)()
-    elif game.variant_name.lower() == 'antidraughts':
-        config["engine"]['hub_options']['variant'] = 'losing'
-        engine = partial(engine_wrapper.create_engine, config)()
-    elif game.variant_name.lower() == 'frisian' or game.variant_name.lower() == 'frysk!':
-        config["engine"]['hub_options']['variant'] = 'frisian'
-        engine = partial(engine_wrapper.create_engine, config)()
-    else:  # if game.variant_name.lower() == 'standard' or game.variant_name.lower() == 'fromposition':
-        engine = engine_factory()
+    variant = parse_variant(game.variant_name)
+    engine = engine_factory(variant)
     conversation = Conversation(game, engine, li, __version__, challenge_queue)
 
     logger.info("+++ {}".format(game))
@@ -337,6 +328,21 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
         logger.info("--- {} Game over".format(game.url()))
 
     control_queue.put_nowait({"type": "local_game_done"})
+
+
+def parse_variant(variant):
+    variant = variant.lower()
+
+    if variant in ["standard", "fromposition"]:
+        return "normal"
+    elif variant == "breakthrough":
+        return "bt"
+    elif variant == "antidraughts":
+        return "losing"
+    elif variant == "frysk":
+        return "frisian"
+    else:
+        return variant
 
 
 def choose_move_time(engine, board, search_time):
