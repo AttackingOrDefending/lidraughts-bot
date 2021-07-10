@@ -128,6 +128,7 @@ class Engine:
                         variants.add(variant)
             else:
                 logging.warning("Unexpected engine response to uci: %s %s", command, arg)
+            self.variants = variants
             self.id = engine_info
 
     def init(self):
@@ -158,7 +159,8 @@ class Engine:
         elif value is None:
             value = "none"
 
-        self.send("set-param name=%s value=%s" % (name, value))
+        if name == 'variant' and self.variants or name != 'variant':
+            self.send("set-param name=%s value=%s" % (name, value))
 
     def go(self, position, my_time=None, inc=None, movetime=None, clock=None, depth=None, analysisnodes=None, handicap=None, pst=None,
            searchnodes=None, bookply=None, bookmargin=None, ply=None, moves=None, ponder=False):
