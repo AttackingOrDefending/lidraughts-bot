@@ -10,6 +10,7 @@
 - In `config.yml`, enter the binary name as the `engine.name` field (the engine should be for Linux)
 - In `startbot.sh`, delete `chmod +x ./engines/engine_name` if you are using a homemade engine else replace `engine_name` with the binary name at line `chmod +x ./engines/engine_name`
 - Edit the variants: `supported_variants` and time controls: `supported_tc` from the config.yml as necessary
+- make sure that the .gitignore file is empty
 - Create a [new heroku app](https://dashboard.heroku.com/new-app).
 - Follow the steps on Deploy using Heroku Git
 - Once it has been deployed, go to Resources tab on heroku and enable worker (bash startbot.sh) dynos. (If you don't see any dynos in the Resources tab, then you must wait for about 5 minutes and then refresh your heroku page.)
