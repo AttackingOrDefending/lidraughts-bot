@@ -100,7 +100,7 @@ class EngineWrapper:
 class HubEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
         self.go_commands = options.pop("go_commands", {}) or {}
-        self.engine = hub_engine.Engine(commands)
+        self.engine = hub_engine.Engine(' '.join(commands))  # It crashes if I don't join the commands
         self.engine.uci()
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
