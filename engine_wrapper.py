@@ -3,7 +3,6 @@ import hub_engine
 import backoff
 import subprocess
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 
@@ -101,10 +100,7 @@ class EngineWrapper:
 class HubEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
         self.go_commands = options.pop("go_commands", {}) or {}
-        if sys.platform == 'win32':
-            self.engine = hub_engine.Engine(commands)
-        else:
-            self.engine = hub_engine.Engine(' '.join(commands))
+        self.engine = hub_engine.Engine(commands)
         self.engine.uci()
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
