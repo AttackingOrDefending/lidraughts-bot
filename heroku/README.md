@@ -6,7 +6,7 @@
 - Once your account has been created and you are logged in, [create a personal OAuth2 token](https://lidraughts.org/account/oauth/token/create?scopes[]=bot:play&description=lidraughts-bot) with the "Play as a bot" selected and add a description
 - A `token` e.g. `Xb0ddNrLabc0lGK2` will be displayed. Store this in `config.yml` as the `token` field
 - NOTE: You won't see this token again on Lidraughts.
-- Move all the files from `./heroku` (except for README.md) to `.`
+- Move all the files from `./heroku` to `.` (replace the files in `.` with the files from `./heroku` in case of a conflict)
 - In `config.yml`, enter the binary name as the `engine.name` field (the engine should be for Linux)
 - In `startbot.sh`, delete `chmod +x ./engines/engine_name` if you are using a homemade engine else replace `engine_name` with the binary name at line `chmod +x ./engines/engine_name`
 - Edit the variants: `supported_variants` and time controls: `supported_tc` from the config.yml as necessary
