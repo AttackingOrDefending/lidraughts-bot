@@ -29,6 +29,7 @@ class Engine:
         self.ENGINE = ENGINE
         self.info = {}
         cwd = os.path.realpath(os.path.expanduser("."))
+        command = list(filter(bool, command))
         command = subprocess.list2cmdline(command)
         self.p = self.open_process(command, cwd)
         self.last_sent = ""
