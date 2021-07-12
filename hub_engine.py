@@ -19,6 +19,7 @@ import signal
 import logging
 import threading
 import time
+import sys
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -28,7 +29,10 @@ class Engine:
     def __init__(self, command, ENGINE=5):
         self.ENGINE = ENGINE
         self.info = {}
-        self.p = self.open_process(command)
+        if sys.platform == 'win32':
+            self.p = self.open_process(command)
+        else:
+            self.p = self.open_process(' '.join(command))
         self.last_sent = ""
 
     def open_process(self, command, cwd=None, shell=True, _popen_lock=threading.Lock()):
