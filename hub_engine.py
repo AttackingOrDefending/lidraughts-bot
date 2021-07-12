@@ -29,10 +29,10 @@ class Engine:
     def __init__(self, command, ENGINE=5):
         self.ENGINE = ENGINE
         self.info = {}
-        if sys.platform == 'win32':
-            self.p = self.open_process(command)
-        else:
-            self.p = self.open_process(' '.join(command))
+        cwd = os.path.realpath(os.path.expanduser("."))
+        if sys.platform != 'win32':
+            command = ' '.join(command)
+        self.p = self.open_process(command, cwd)
         self.last_sent = ""
 
     def open_process(self, command, cwd=None, shell=True, _popen_lock=threading.Lock()):
