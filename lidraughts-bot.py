@@ -1,5 +1,5 @@
 import argparse
-import draughts
+import pydraughts.game as draughts
 import engine_wrapper
 import model
 import json
