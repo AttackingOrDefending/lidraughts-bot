@@ -5,7 +5,7 @@ And some handy classes to extend
 
 import random
 from engine_wrapper import EngineWrapper
-import pydraughts.game as draughts
+import draughts
 
 
 class FillerEngine:
