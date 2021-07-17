@@ -339,7 +339,7 @@ def parse_variant(variant):
         return "bt"
     elif variant == "antidraughts":
         return "losing"
-    elif variant == "frysk":
+    elif variant == "frysk!":
         return "frisian"
     else:
         return variant
