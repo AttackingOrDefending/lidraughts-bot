@@ -45,10 +45,10 @@ class EngineWrapper:
         if movetime is not None:
             movetime = float(movetime) // 1000
         if board.get_fen()[0].lower() == 'w':
-            time = wtime - winc  # Because Scan adds first the increment
+            time = wtime - max(winc, 0)  # Because Scan adds first the increment
             inc = winc
         else:
-            time = btime - binc  # Because Scan adds first the increment
+            time = btime - max(binc, 0)  # Because Scan adds first the increment
             inc = binc
         time_limit = hub_engine.Limit(time=time / 1000,
                                       inc=inc / 1000,
