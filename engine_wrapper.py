@@ -44,12 +44,22 @@ class EngineWrapper:
         movetime = cmds.get("movetime")
         if movetime is not None:
             movetime = float(movetime) // 1000
+        if winc < 0:
+            wtime += winc
+            winc = 0
+        if binc < 0:
+            btime += binc
+            binc = 0
         if board.get_fen()[0].lower() == 'w':
-            time = wtime - max(winc, 0)  # Because Scan adds first the increment
+            time = wtime - winc  # Because Scan adds first the increment
             inc = winc
         else:
-            time = btime - max(binc, 0)  # Because Scan adds first the increment
+            time = btime - binc  # Because Scan adds first the increment
             inc = binc
+        if time < 0:
+            inc += time
+            inc = max(inc, 0)
+        time = max(time, 0)
         time_limit = hub_engine.Limit(time=time / 1000,
                                       inc=inc / 1000,
                                       depth=cmds.get("depth"),
