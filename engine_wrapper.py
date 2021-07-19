@@ -59,7 +59,7 @@ class EngineWrapper:
         if time < 0:
             inc += time
             inc = max(inc, 0)
-        time = max(time, 0)
+            time = 0
         time_limit = hub_engine.Limit(time=time / 1000,
                                       inc=inc / 1000,
                                       depth=cmds.get("depth"),
