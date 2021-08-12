@@ -227,8 +227,9 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     # Initial response of stream will be the full game info. Store it
     initial_state = json.loads(next(lines).decode('utf-8'))
     game = model.Game(initial_state, user_profile["username"], li.baseUrl, config.get("abort_time", 20))
+    initial_time = (game.state['wtime'] if game.my_color == "white" else game.state['btime']) / 1000
     variant = parse_variant(game.variant_name)
-    engine = engine_factory(variant)
+    engine = engine_factory(variant, initial_time)
     conversation = Conversation(game, engine, li, __version__, challenge_queue)
 
     logger.info("+++ {}".format(game))
@@ -339,7 +340,7 @@ def parse_variant(variant):
         return "bt"
     elif variant == "antidraughts":
         return "losing"
-    elif variant == "frysk!":
+    elif variant == "frysk":
         return "frisian"
     else:
         return variant
