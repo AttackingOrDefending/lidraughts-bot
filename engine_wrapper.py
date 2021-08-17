@@ -60,7 +60,7 @@ class EngineWrapper:
         return [f"{stat}: {info[stat]}" for stat in stats if stat in info]
 
     def name(self):
-        return self.engine.id["name"]
+        return self.engine.id.get("name", "")
 
     def stop(self):
         pass
