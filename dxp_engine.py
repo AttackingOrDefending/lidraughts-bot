@@ -103,6 +103,7 @@ class Engine:
         self.console.run_command(f'gamereq {color} {time} {moves}')
         accepted = self.recv_accept()
         logger.debug(f'Aceepted: {accepted}')
+        self.id["name"] = dxp.current.engineName
 
     def recv_accept(self):
         while True:
