@@ -15,6 +15,7 @@ class Engine:
         self.command = command
         self.ENGINE = ENGINE
         self.info = {}
+        self.id = {}
         self.console = dxp.tConsoleHandler
         self.receiver = dxp.tReceiveHandler
         self.game_started = False
