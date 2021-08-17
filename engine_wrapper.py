@@ -30,7 +30,7 @@ def create_engine(config, variant, initial_time):
         Engine = getHomemadeEngine(cfg["name"])
     else:
         raise ValueError(
-            f"    Invalid engine type: {engine_type}. Expected hub, or homemade.")
+            f"    Invalid engine type: {engine_type}. Expected hub, dxp, or homemade.")
     options = cfg.get(engine_type + "_options", {}) or {}
     options['variant'] = variant
     options['initial-time'] = initial_time
