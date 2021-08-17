@@ -28,6 +28,7 @@ class Engine:
     def __init__(self, command, ENGINE=5):
         self.ENGINE = ENGINE
         self.info = {}
+        self.id = {}
         cwd = os.path.realpath(os.path.expanduser("."))
         command = list(filter(bool, command))
         command = subprocess.list2cmdline(command)
