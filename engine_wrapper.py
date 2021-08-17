@@ -77,6 +77,7 @@ class EngineWrapper:
 
 class HubEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
+        self.last_move_info = {}
         self.go_commands = options.pop("go_commands", {}) or {}
         self.engine = hub_engine.Engine(commands)
         self.engine.uci()
@@ -153,6 +154,7 @@ class HubEngine(EngineWrapper):
 
 class DXPEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
+        self.last_move_info = {}
         self.engine = dxp_engine.Engine(commands, options)
 
     def search_for(self, board, movetime):
