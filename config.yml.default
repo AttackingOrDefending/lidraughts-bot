@@ -5,7 +5,7 @@ engine:                      # Engine settings.
   dir: "./engines/"          # Directory containing engines, relative to this project.
   name: "engine_name"        # Binary name of the engine to use.
   engine_arguement: "hub"
-  protocol: "hub"            # "hub" or "strategy"
+  protocol: "hub"            # "hub", "dxp" or "strategy"
   ponder: true               # Think on opponent's time.
 # engine_options:            # Any custom command line params to pass to the engine.
 #   cpuct: 3.1
