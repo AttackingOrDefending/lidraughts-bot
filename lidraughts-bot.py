@@ -389,11 +389,11 @@ def start_pondering(engine, board, game, can_ponder, best_move, ponder_move, sta
     binc = game.state["binc"]
     setup_time = int((time.perf_counter_ns() - start_time) / 1000000)
     if board.whose_turn() == draughts.WHITE:
-        wtime = max(0, wtime - move_overhead - setup_time + winc)
-        winc = max(0, winc - move_overhead_inc)
+        wtime = wtime - move_overhead - setup_time + winc
+        winc = winc - move_overhead_inc
     else:
-        btime = max(0, btime - move_overhead - setup_time + binc)
-        binc = max(0, binc - move_overhead_inc)
+        btime = btime - move_overhead - setup_time + binc
+        binc = binc - move_overhead_inc
 
     def ponder_thread_func(game, engine, board, wtime, btime, winc, binc):
         global ponder_results
@@ -403,14 +403,14 @@ def start_pondering(engine, board, game, can_ponder, best_move, ponder_move, sta
     logger.info("Pondering for wtime {} btime {}".format(wtime, btime))
     ponder_thread = threading.Thread(target=ponder_thread_func, args=(game, engine, ponder_board, wtime, btime, winc, binc))
     ponder_thread.start()
-    return ponder_thread, board.li_api_to_li_one(ponder_move)
+    return ponder_thread, draughts.Move(li_api_move=ponder_move).li_one_move
 
 
 def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
     if ponder_thread is None:
         return None, None
 
-    move_uci = board.move_stack[-1]
+    move_uci = board.move_stack[-1].li_one_move
     if ponder_uci == move_uci:
         engine.ponderhit()
         ponder_thread.join()

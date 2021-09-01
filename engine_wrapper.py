@@ -1,10 +1,10 @@
 import os
-import hub_engine
 import backoff
 import subprocess
 import logging
-import dxp_engine
-import draughts
+from draughts.engine import HubEngine as hub_engine
+from draughts.engine import DXPEngine as dxp_engine
+from draughts.engine import Limit
 
 logger = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ class HubEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
         self.last_move_info = {}
         self.go_commands = options.pop("go_commands", {}) or {}
-        self.engine = hub_engine.Engine(commands)
+        self.engine = hub_engine(commands)
         self.engine.uci()
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
@@ -104,7 +104,7 @@ class HubEngine(EngineWrapper):
         self.engine.init()
 
     def search_for(self, board, movetime):
-        return self.search(board, hub_engine.Limit(movetime=movetime // 1000), False)
+        return self.search(board, Limit(movetime=movetime // 1000), False)
 
     def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
         cmds = self.go_commands
@@ -112,32 +112,27 @@ class HubEngine(EngineWrapper):
         if movetime is not None:
             movetime = float(movetime) // 1000
         if board.get_fen()[0].lower() == 'w':
-            time = wtime - winc  # Because Scan adds first the increment
+            time = wtime
             inc = winc
         else:
-            time = btime - binc  # Because Scan adds first the increment
+            time = btime
             inc = binc
-        time_limit = hub_engine.Limit(time=time / 1000,
-                                      inc=inc / 1000,
-                                      depth=cmds.get("depth"),
-                                      nodes=cmds.get("nodes"),
-                                      movetime=movetime)
+        time_limit = Limit(time=time / 1000,
+                           inc=inc / 1000,
+                           depth=cmds.get("depth"),
+                           nodes=cmds.get("nodes"),
+                           movetime=movetime)
         return self.search(board, time_limit, ponder)
     
     def search(self, board, time_limit, ponder):
-        result = self.engine.play(board, time_limit, ponder=ponder)
-        ponder_move = None
+        best_move, ponder_move = self.engine.play(board, time_limit, ponder=ponder)
         self.last_move_info = self.engine.info
         self.print_stats()
-        if result[0] is None:
+        if best_move is None:
             return None, None
-        ponder_board = board.copy()
-        best_move, moves = ponder_board.hub_to_li_board(result[0] + result[2])
-        if result[1]:
-            for move in moves:
-                ponder_board.move(move)
-            ponder_move, _ = ponder_board.hub_to_li_board(result[1] + result[3])
-        return best_move, ponder_move
+        if ponder_move:
+            ponder_move = ponder_move.li_api_move
+        return best_move.li_api_move, ponder_move
 
     def stop(self):
         self.engine.stop()
@@ -155,19 +150,18 @@ class HubEngine(EngineWrapper):
 class DXPEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
         self.last_move_info = {}
-        self.engine = dxp_engine.Engine(commands, options)
+        self.engine = dxp_engine(commands, options)
 
     def search_for(self, board, movetime):
-        return self.search(board, False)
+        return self.search(board)
 
     def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
-        return self.search(board, ponder)
+        return self.search(board)
 
-    def search(self, board, ponder):
-        result = self.engine.play(board, ponder=ponder)
-        ponder_move = None
-        best_move = board.board_to_li_api(result)
-        return best_move, ponder_move
+    def search(self, board):
+        best_move, _ = self.engine.play(board)
+        best_move = best_move.li_api_move
+        return best_move, None
 
     def quit(self):
         self.engine.quit()
