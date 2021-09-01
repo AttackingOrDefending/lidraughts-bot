@@ -106,7 +106,7 @@ WantedBy=multi-user.target
 ```
 
 # Acknowledgements
-Thanks to the Lichess Team for creating a [repository](https://github.com/ShailChoksi/lichess-bot) that could be easily modified to a format that supports Lidraughts. Thanks to [RoepStoep](https://github.com/RoepStoep) for his [draughtsnet](https://github.com/RoepStoep/draughtsnet) code which allows engine communication seamlessly and for running an [API](https://lidraughts.org/api) to communicate with the BOTs. Thanks to [akalverboer](https://github.com/akalverboer) for their [DXC100_draughts_client](https://github.com/akalverboer/DXC100_draughts_client) which was modified to add support for DXP engines.
+Thanks to the Lichess Team for creating a [repository](https://github.com/ShailChoksi/lichess-bot) that could be easily modified to a format that supports Lidraughts. Thanks to [RoepStoep](https://github.com/RoepStoep) for running an [API](https://lidraughts.org/api) to communicate with the BOTs.
 
 # License
 lidraughts-bot is licensed under the AGPLv3 (or any later version at your option). Some files are licensed under a different license (the different license will be stated at the top of the file if that's the case). Check out LICENSE.txt for the full text.
