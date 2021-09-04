@@ -4,6 +4,7 @@ import subprocess
 import logging
 from draughts.engine import HubEngine as hub_engine
 from draughts.engine import DXPEngine as dxp_engine
+from draughts.engine import CheckerBoardEngine as cb_engine
 from draughts.engine import Limit
 
 logger = logging.getLogger(__name__)
@@ -26,11 +27,13 @@ def create_engine(config, variant, initial_time):
         Engine = HubEngine
     elif engine_type == "dxp":
         Engine = DXPEngine
+    elif engine_type == "cb":
+        Engine = CheckerBoardEngine
     elif engine_type == "homemade":
         Engine = getHomemadeEngine(cfg["name"])
     else:
         raise ValueError(
-            f"    Invalid engine type: {engine_type}. Expected hub, dxp, or homemade.")
+            f"    Invalid engine type: {engine_type}. Expected hub, dxp, cb, or homemade.")
     options = cfg.get(engine_type + "_options", {}) or {}
     options['variant'] = variant
     options['initial-time'] = initial_time
@@ -165,6 +168,51 @@ class DXPEngine(EngineWrapper):
 
     def quit(self):
         self.engine.quit()
+
+    def kill_process(self):
+        self.engine.kill_process()
+
+
+class CheckerBoardEngine(EngineWrapper):
+    def __init__(self, commands, options, stderr):
+        self.last_move_info = {}
+        self.go_commands = options.pop("go_commands", {}) or {}
+        self.engine = cb_engine(commands)
+        if options:
+            for name in options:
+                self.engine.setoption(name, options[name])
+
+    def get_stats(self):
+        return [f"info: {self.last_move_info}", f"result: {self.engine.result}"]
+
+    def search_for(self, board, movetime):
+        return self.search(board, Limit(movetime=movetime // 1000))
+
+    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
+        cmds = self.go_commands
+        movetime = cmds.get("movetime")
+        if movetime is not None:
+            movetime = float(movetime) // 1000
+        if board.get_fen()[0].lower() == 'w':
+            time = wtime
+            inc = winc
+        else:
+            time = btime
+            inc = binc
+        time_limit = Limit(time=time / 1000,
+                           inc=inc / 1000,
+                           depth=cmds.get("depth"),
+                           nodes=cmds.get("nodes"),
+                           movetime=movetime)
+        return self.search(board, time_limit)
+
+    def search(self, board, time_limit):
+        best_move, _ = self.engine.play(board, time_limit)
+        self.last_move_info = self.engine.info
+        self.print_stats()
+        if best_move is None:
+            return None, None
+        return best_move.li_api_move, None
 
     def kill_process(self):
         self.engine.kill_process()

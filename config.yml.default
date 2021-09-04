@@ -5,7 +5,7 @@ engine:                      # Engine settings.
   dir: "./engines/"          # Directory containing engines, relative to this project.
   name: "engine_name"        # Binary name of the engine to use.
   engine_arguement: "hub"
-  protocol: "hub"            # "hub", "dxp" or "strategy"
+  protocol: "hub"            # "hub", "dxp", "cb" (checkerboard) or "strategy"
   ponder: true               # Think on opponent's time.
 # engine_options:            # Any custom command line params to pass to the engine.
 #   cpuct: 3.1
@@ -21,6 +21,8 @@ engine:                      # Engine settings.
 #     movetime: 1000         # Integer. Search exactly movetime milliseconds.
   dxp_options:
     engine_opened: true
+  cb_options:
+    divide-time-by: 40
   silence_stderr: false      # Some engines (yes you, Leela) are very noisy.
 
 abort_time: 20               # Time to abort a game in seconds when there is no activity.
