@@ -6,6 +6,7 @@ And some handy classes to extend
 import random
 from engine_wrapper import EngineWrapper
 import draughts
+from draughts.engine import PlayResult
 
 
 class FillerEngine:
@@ -55,15 +56,19 @@ class MinimalEngine(EngineWrapper):
             "name": self.engine_name
         }
 
-    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
+    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder, draw_offered):
         timeleft = 0
         if board.whose_turn() == draughts.WHITE:
             timeleft = wtime
         else:
             timeleft = btime
-        return self.search(board, timeleft, ponder)
+        return self.search(board, timeleft, ponder, draw_offered)
 
-    def search(self, board, timeleft, ponder):
+    def search(self, board, timeleft, ponder, draw_offered):
+        """
+        The method to be implemented in your homemade engine
+        NOTE: This method must return an instance of "draughts.engine.PlayResult"
+        """
         raise NotImplementedError("The search method is not implemented")
 
     def notify(self, method_name, *args, **kwargs):
@@ -90,7 +95,7 @@ class ExampleEngine(MinimalEngine):
 class RandomMove(ExampleEngine):
     def search(self, board, *args):
         move = random.choice(board.legal_moves()[0])
-        return board.board_to_li_api(move), None
+        return PlayResult(board.board_to_li_api(move), None)
 
 
 class FirstMoveLidraughts(ExampleEngine):
@@ -99,7 +104,7 @@ class FirstMoveLidraughts(ExampleEngine):
         moves = board.legal_moves()[0]
         moves = list(map(board.board_to_li_api, moves))
         moves.sort()
-        return moves[0], None
+        return PlayResult(moves[0], None)
 
 
 class FirstMoveHub(ExampleEngine):
@@ -111,7 +116,7 @@ class FirstMoveHub(ExampleEngine):
         for hub_move, li_move in zip(hub_moves, moves):
             hub_to_moves[hub_move] = li_move
         hub_moves.sort()
-        return hub_to_moves[hub_moves[0]], None
+        return PlayResult(hub_to_moves[hub_moves[0]], None)
 
 
 class FirstMovePDN(ExampleEngine):
@@ -123,4 +128,4 @@ class FirstMovePDN(ExampleEngine):
         for pdn_move, li_move in zip(pdn_moves, moves):
             pdn_to_moves[pdn_move] = li_move
         pdn_moves.sort()
-        return pdn_to_moves[pdn_moves[0]], None
+        return PlayResult(pdn_to_moves[pdn_moves[0]], None)

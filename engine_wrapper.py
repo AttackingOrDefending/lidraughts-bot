@@ -44,13 +44,28 @@ class EngineWrapper:
     def __init__(self, commands, options, stderr):
         pass
 
-    def search_for(self, board, movetime):
-        pass
+    def search_for(self, board, movetime, draw_offered):
+        return self.search(board, Limit(movetime=movetime // 1000), False, draw_offered)
 
-    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
-        pass
+    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder, draw_offered):
+        cmds = self.go_commands
+        movetime = cmds.get("movetime")
+        if movetime is not None:
+            movetime = float(movetime) // 1000
+        if board.get_fen()[0].lower() == 'w':
+            time = wtime
+            inc = winc
+        else:
+            time = btime
+            inc = binc
+        time_limit = Limit(time=time / 1000,
+                           inc=inc / 1000,
+                           depth=cmds.get("depth"),
+                           nodes=cmds.get("nodes"),
+                           movetime=movetime)
+        return self.search(board, time_limit, ponder, draw_offered)
 
-    def search(self, board, time_limit, ponder):
+    def search(self, board, time_limit, ponder, draw_offered):
         pass
 
     def print_stats(self):
@@ -106,36 +121,11 @@ class HubEngine(EngineWrapper):
 
         self.engine.init()
 
-    def search_for(self, board, movetime):
-        return self.search(board, Limit(movetime=movetime // 1000), False)
-
-    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
-        cmds = self.go_commands
-        movetime = cmds.get("movetime")
-        if movetime is not None:
-            movetime = float(movetime) // 1000
-        if board.get_fen()[0].lower() == 'w':
-            time = wtime
-            inc = winc
-        else:
-            time = btime
-            inc = binc
-        time_limit = Limit(time=time / 1000,
-                           inc=inc / 1000,
-                           depth=cmds.get("depth"),
-                           nodes=cmds.get("nodes"),
-                           movetime=movetime)
-        return self.search(board, time_limit, ponder)
-    
-    def search(self, board, time_limit, ponder):
-        best_move, ponder_move = self.engine.play(board, time_limit, ponder=ponder)
-        self.last_move_info = self.engine.info
+    def search(self, board, time_limit, ponder, draw_offered):
+        result = self.engine.play(board, time_limit, ponder=ponder)
+        self.last_move_info = result.info
         self.print_stats()
-        if best_move is None:
-            return None, None
-        if ponder_move:
-            ponder_move = ponder_move.li_api_move
-        return best_move.li_api_move, ponder_move
+        return result
 
     def stop(self):
         self.engine.stop()
@@ -153,18 +143,17 @@ class HubEngine(EngineWrapper):
 class DXPEngine(EngineWrapper):
     def __init__(self, commands, options, stderr):
         self.last_move_info = {}
+        self.go_commands = options.pop("go_commands", {}) or {}
         self.engine = dxp_engine(commands, options)
 
-    def search_for(self, board, movetime):
-        return self.search(board)
+    def search_for(self, board, movetime, draw_offered):
+        return self.search(board, None, False, False)
 
-    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
-        return self.search(board)
+    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder, draw_offered):
+        return self.search(board, None, False, False)
 
-    def search(self, board):
-        best_move, _ = self.engine.play(board)
-        best_move = best_move.li_api_move
-        return best_move, None
+    def search(self, board, time_limit, ponder, draw_offered):
+        return self.engine.play(board)
 
     def quit(self):
         self.engine.quit()
@@ -182,37 +171,11 @@ class CheckerBoardEngine(EngineWrapper):
             for name in options:
                 self.engine.setoption(name, options[name])
 
-    def get_stats(self):
-        return [f"info: {self.last_move_info}", f"result: {self.engine.result}"]
-
-    def search_for(self, board, movetime):
-        return self.search(board, Limit(movetime=movetime // 1000))
-
-    def search_with_ponder(self, board, wtime, btime, winc, binc, ponder):
-        cmds = self.go_commands
-        movetime = cmds.get("movetime")
-        if movetime is not None:
-            movetime = float(movetime) // 1000
-        if board.get_fen()[0].lower() == 'w':
-            time = wtime
-            inc = winc
-        else:
-            time = btime
-            inc = binc
-        time_limit = Limit(time=time / 1000,
-                           inc=inc / 1000,
-                           depth=cmds.get("depth"),
-                           nodes=cmds.get("nodes"),
-                           movetime=movetime)
-        return self.search(board, time_limit)
-
-    def search(self, board, time_limit):
-        best_move, _ = self.engine.play(board, time_limit)
-        self.last_move_info = self.engine.info
+    def search(self, board, time_limit, ponder, draw_offered):
+        result = self.engine.play(board, time_limit)
+        self.last_move_info = result.info
         self.print_stats()
-        if best_move is None:
-            return None, None
-        return best_move.li_api_move, None
+        return result
 
     def kill_process(self):
         self.engine.kill_process()

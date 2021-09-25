@@ -1,5 +1,6 @@
 import argparse
 import draughts
+from draughts.engine import PlayResult
 import engine_wrapper
 import model
 import json
@@ -281,17 +282,20 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                     print_move_number(board)
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
+                    draw_offered = check_for_draw_offer(game)
                     if len(board.move_stack) < 2:
-                        best_move, ponder_move = choose_first_move(engine, board)
+                        best_move = choose_first_move(engine, board, draw_offered)
                     elif is_correspondence:
-                        best_move, ponder_move = choose_move_time(engine, board, correspondence_move_time)
+                        best_move = choose_move_time(engine, board, correspondence_move_time, draw_offered)
                     else:
-                        best_move, ponder_move = get_pondering_results(ponder_thread, ponder_uci, game, board, engine)
-                        if best_move is None:
-                            best_move, ponder_move = choose_move(engine, board, game, start_time, move_overhead, move_overhead_inc)
-                    for move in best_move:
-                        li.make_move(game.id, move)
-                    ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, ponder_move, start_time, move_overhead, move_overhead_inc)
+                        best_move = get_pondering_results(ponder_thread, ponder_uci, game, board, engine)
+                        if best_move.move is None:
+                            best_move = choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc)
+                    if best_move.resign:
+                        li.resign(game.id)
+                    else:
+                        li.make_move(game.id, best_move)
+                    ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
                 elif len(board.move_stack) == 0:
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
@@ -346,17 +350,17 @@ def parse_variant(variant):
         return variant
 
 
-def choose_move_time(engine, board, search_time):
+def choose_move_time(engine, board, search_time, draw_offered):
     logger.info("Searching for time {}".format(search_time))
-    return engine.search_for(board, search_time)
+    return engine.search_for(board, search_time, draw_offered)
 
 
-def choose_first_move(engine, board):
+def choose_first_move(engine, board, draw_offered):
     # need to hardcode first movetime (10000 ms) since Lidraughts has 30 sec limit.
-    return choose_move_time(engine, board, 10000)
+    return choose_move_time(engine, board, 10000, draw_offered)
 
 
-def choose_move(engine, board, game, start_time, move_overhead, move_overhead_inc):
+def choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc):
     wtime = game.state["wtime"]
     btime = game.state["btime"]
     winc = game.state["winc"]
@@ -370,17 +374,17 @@ def choose_move(engine, board, game, start_time, move_overhead, move_overhead_in
         binc = max(0, binc - move_overhead_inc)
 
     logger.info("Searching for wtime {} btime {}".format(wtime, btime))
-    return engine.search_with_ponder(board, wtime, btime, winc, binc, False)
+    return engine.search_with_ponder(board, wtime, btime, winc, binc, False, draw_offered)
 
 
-def start_pondering(engine, board, game, can_ponder, best_move, ponder_move, start_time, move_overhead, move_overhead_inc):
-    if not can_ponder or ponder_move is None:
+def start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc):
+    if not can_ponder or best_move.ponder is None:
         return None, None
 
     ponder_board = board.copy()
-    for move in best_move:
+    for move in best_move.move:
         ponder_board.push_move(move)
-    for move in ponder_move:
+    for move in best_move.ponder:
         ponder_board.push_move(move)
 
     wtime = game.state["wtime"]
@@ -397,18 +401,19 @@ def start_pondering(engine, board, game, can_ponder, best_move, ponder_move, sta
 
     def ponder_thread_func(game, engine, board, wtime, btime, winc, binc):
         global ponder_results
-        best_move, ponder_move = engine.search_with_ponder(board, wtime, btime, winc, binc, True)
+        best_move, ponder_move = engine.search_with_ponder(board, wtime, btime, winc, binc, True, False)
         ponder_results[game.id] = (best_move, ponder_move)
 
     logger.info("Pondering for wtime {} btime {}".format(wtime, btime))
     ponder_thread = threading.Thread(target=ponder_thread_func, args=(game, engine, ponder_board, wtime, btime, winc, binc))
     ponder_thread.start()
-    return ponder_thread, draughts.Move(li_api_move=ponder_move).li_one_move
+    return ponder_thread, best_move.ponder.li_one_move
 
 
 def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
+    no_move = PlayResult(None, None)
     if ponder_thread is None:
-        return None, None
+        return no_move
 
     move_uci = board.move_stack[-1].li_one_move
     if ponder_uci == move_uci:
@@ -418,7 +423,11 @@ def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
     else:
         engine.stop()
         ponder_thread.join()
-        return None, None
+        return no_move
+
+
+def check_for_draw_offer(game):
+    return game.state.get(f'{game.opponent_color[0]}draw', False)
 
 
 def fake_thinking(config, board, game):
