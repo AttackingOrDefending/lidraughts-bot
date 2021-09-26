@@ -20,6 +20,7 @@ from functools import partial
 from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError, ReadTimeout
 from urllib3.exceptions import ProtocolError
 from ColorLogger import enable_color_logging
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -251,6 +252,12 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     ponder_thread = None
     ponder_uci = None
 
+    greeting_cfg = config.get("greeting", {}) or {}
+    keyword_map = defaultdict(str, me=game.me.name, opponent=game.opponent.name)
+    get_greeting = lambda greeting: str(greeting_cfg.get(greeting, "") or "").format_map(keyword_map)
+    hello = get_greeting("hello")
+    goodbye = get_greeting("goodbye")
+
     first_move = True
     correspondence_disconnect_time = 0
     while not terminated:
@@ -284,6 +291,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
 
                     draw_offered = check_for_draw_offer(game)
                     if len(board.move_stack) < 2:
+                        conversation.send_message("player", hello)
                         best_move = choose_first_move(engine, board, draw_offered)
                     elif is_correspondence:
                         best_move = choose_move_time(engine, board, correspondence_move_time, draw_offered)
@@ -297,6 +305,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                         li.make_move(game.id, best_move)
                     ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
+                    conversation.send_message("player", goodbye)
                 elif len(board.move_stack) == 0:
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
