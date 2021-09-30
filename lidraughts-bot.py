@@ -20,6 +20,7 @@ from functools import partial
 from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError, ReadTimeout
 from urllib3.exceptions import ProtocolError
 from ColorLogger import enable_color_logging
+from collections import defaultdict
 
 logger = logging.getLogger(__name__)
 
@@ -175,7 +176,7 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename)
                 game_id = event["game"]["id"]
                 pool.apply_async(play_game, [li, game_id, control_queue, engine_factory, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level])
 
-            if event["type"] == "correspondence_ping" or (event["type"] == "local_game_done" and not wait_for_correspondence_ping):
+            if (event["type"] == "correspondence_ping" or (event["type"] == "local_game_done" and not wait_for_correspondence_ping)) and not challenge_queue:
                 if event["type"] == "correspondence_ping" and wait_for_correspondence_ping:
                     correspondence_queue.put("")
 
@@ -245,6 +246,11 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     move_overhead = config.get("move_overhead", 1000)
     move_overhead_inc = config.get("move_overhead_inc", 100)
     delay_seconds = config.get("rate_limiting_delay", 0)/1000
+    greeting_cfg = config.get("greeting", {}) or {}
+    keyword_map = defaultdict(str, me=game.me.name, opponent=game.opponent.name)
+    get_greeting = lambda greeting: str(greeting_cfg.get(greeting, "") or "").format_map(keyword_map)
+    hello = get_greeting("hello")
+    goodbye = get_greeting("goodbye")
     board = draughts.Game(game.variant_name.lower(), game.initial_fen)
     moves, old_moves = [], []
 
@@ -284,6 +290,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
 
                     draw_offered = check_for_draw_offer(game)
                     if len(board.move_stack) < 2:
+                        conversation.send_message("player", hello)
                         best_move = choose_first_move(engine, board, draw_offered)
                     elif is_correspondence:
                         best_move = choose_move_time(engine, board, correspondence_move_time, draw_offered)
@@ -297,6 +304,8 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                         li.make_move(game.id, best_move)
                     ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
+                elif is_game_over(board):
+                    conversation.send_message("player", goodbye)
                 elif len(board.move_stack) == 0:
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
