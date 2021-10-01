@@ -14,7 +14,7 @@ def load_config(config_file):
             logger.error("There appears to be a syntax problem with your config.yml")
             raise e
         
-        if "LICHESS_BOT_TOKEN" in os.environ:
+        if "LIDRAUGHTS_BOT_TOKEN" in os.environ:
             CONFIG["token"] = os.environ["LIDRAUGHTS_BOT_TOKEN"]
 
         # [section, type, error message]
