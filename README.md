@@ -57,14 +57,6 @@ pip install -r requirements.txt
 - In `config.yml`, enter the binary name as the `engine.name` field (In Windows you may need to type a name with ".exe", like "lczero.exe")
 
 
-## Lidraughts Upgrade to Bot Account
-**WARNING** This is irreversible. [Read more about upgrading to bot account](https://lidraughts.org/api#operation/botAccountUpgrade).
-- run `python lidraughts-bot.py -u`
-
-## To Quit
-- Press CTRL+C
-- It may take some time to quit
-
 ## Creating a homemade bot
 
 As an alternative to creating an entire draughts engine and implementing one of the communiciation protocols (e.g. Hub), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
@@ -161,6 +153,25 @@ will append `nodes 1 depth 5 movetime 1000` to the command to start thinking of 
     -casual
 ```
 
+## Lidraughts Upgrade to Bot Account
+**WARNING** This is irreversible. [Read more about upgrading to bot account](https://lidraughts.org/api#operation/botAccountUpgrade).
+- run `python lidraughts-bot.py -u`
+
+## To Run
+After activating the virtual environment created in the installation steps (the `source` line for Linux and Macs or the `activate` script for Windows), run
+```python
+python lidraughts-bot.py
+```
+The working directory for the engine execution will be the lishogi-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lishogi-bot directory.
+
+To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lishogi-bot:
+```python
+python lidraughts-bot.py -v
+```
+
+## To Quit
+- Press CTRL+C
+- It may take some time to quit
 
 ## Tips & Tricks
 - You can specify a different config file with the `--config` argument.
