@@ -85,7 +85,7 @@ Besides the above, there are many possible options within `config.yml` for confi
     cpuct: 3.1
 ```
 This would create the command-line option `--cpuct=3.1` to be used when starting the engine. Any number of options can be listed here, each getting their own command-line option.
-- `hub_options`: A list of options to pass to a HUB engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When USI engines start, they print a list of configurations that can modify their behavior. For example, Scan 3.1 prints the hub options when run at the command line (`./scan`):
+- `hub_options`: A list of options to pass to a HUB engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When HUB engines start, they print a list of configurations that can modify their behavior. For example, Scan 3.1 prints the hub options when run at the command line (`./scan`):
 
 Any of the names following `option name` can be listed in `hub_options` in order to configure the Scan engine.
 ```yml
