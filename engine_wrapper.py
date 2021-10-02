@@ -98,7 +98,6 @@ class HubEngine(EngineWrapper):
         self.last_move_info = {}
         self.go_commands = options.pop("go_commands", {}) or {}
         self.engine = hub_engine(commands)
-        self.engine.uci()
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
             if 'variant' in options and options['variant'] != 'normal':
