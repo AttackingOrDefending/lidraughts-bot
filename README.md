@@ -162,9 +162,9 @@ After activating the virtual environment created in the installation steps (the 
 ```python
 python lidraughts-bot.py
 ```
-The working directory for the engine execution will be the lishogi-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lishogi-bot directory.
+The working directory for the engine execution will be the lishogi-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lidraughts-bot directory.
 
-To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lishogi-bot:
+To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lisdraughts-bot:
 ```python
 python lidraughts-bot.py -v
 ```
