@@ -42,7 +42,7 @@ pip install -r requirements.txt
 - Edit the variants: `supported_variants` and time controls: `supported_tc` from the config.yml as necessary (use # to disable certain ones)
 
 ### Heroku:
-- See [here](heroku/README.md)
+- See [Here](https://github.com/AttackingOrDefending/lidraughts-bot/blob/main/heroku/README.md) or [Here](https://github.com/SriMethan/lidraughts-bot-heroku)
 
 
 ## Lidraughts OAuth
