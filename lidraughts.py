@@ -66,8 +66,8 @@ class Lidraughts:
 
     def make_move(self, game_id, move):
         for move_part in move.move.li_api_move:
-            return self.api_post(ENDPOINTS["move"].format(game_id, move_part),
-                                 params={'offeringDraw': str(move.draw_offered).lower()})
+            self.api_post(ENDPOINTS["move"].format(game_id, move_part),
+                          params={'offeringDraw': str(move.draw_offered).lower()})
 
     def chat(self, game_id, room, text):
         payload = {'room': room, 'text': text}
