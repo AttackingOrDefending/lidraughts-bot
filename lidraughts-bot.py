@@ -391,10 +391,10 @@ def start_pondering(engine, board, game, can_ponder, best_move, start_time, move
         return None, None
 
     ponder_board = board.copy()
-    for move in best_move.move:
-        ponder_board.push_move(move)
-    for move in best_move.ponder:
-        ponder_board.push_move(move)
+    for move in best_move.move.board_move:
+        ponder_board.move(move)
+    for move in best_move.ponder.board_move:
+        ponder_board.move(move)
 
     wtime = game.state["wtime"]
     btime = game.state["btime"]
