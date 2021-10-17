@@ -410,8 +410,8 @@ def start_pondering(engine, board, game, can_ponder, best_move, start_time, move
 
     def ponder_thread_func(game, engine, board, wtime, btime, winc, binc):
         global ponder_results
-        best_move, ponder_move = engine.search_with_ponder(board, wtime, btime, winc, binc, True, False)
-        ponder_results[game.id] = (best_move, ponder_move)
+        best_move = engine.search_with_ponder(board, wtime, btime, winc, binc, True, False)
+        ponder_results[game.id] = best_move
 
     logger.info("Pondering for wtime {} btime {}".format(wtime, btime))
     ponder_thread = threading.Thread(target=ponder_thread_func, args=(game, engine, ponder_board, wtime, btime, winc, binc))
