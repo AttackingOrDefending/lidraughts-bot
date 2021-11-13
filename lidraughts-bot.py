@@ -242,7 +242,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
 
     engine_cfg = config["engine"]
     ponder_cfg = correspondence_cfg if is_correspondence else engine_cfg
-    can_ponder = ponder_cfg.get('ponder', False)
+    can_ponder = ponder_cfg.get('ponder', False) and engine_cfg['protocol'] in ['hub', 'strategy']
     move_overhead = config.get("move_overhead", 1000)
     move_overhead_inc = config.get("move_overhead_inc", 100)
     delay_seconds = config.get("rate_limiting_delay", 0)/1000
