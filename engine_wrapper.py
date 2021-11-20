@@ -118,8 +118,6 @@ class HubEngine(EngineWrapper):
             for name in options:
                 self.engine.setoption(name, options[name])
 
-        self.engine.init()
-
     def search(self, board, time_limit, ponder, draw_offered):
         result = self.engine.play(board, time_limit, ponder=ponder)
         self.last_move_info = result.info
