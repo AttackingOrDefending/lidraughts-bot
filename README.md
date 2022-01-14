@@ -87,7 +87,7 @@ Steps to create a homemade bot:
 ## Tips & Tricks
 - You can specify a different config file with the `--config` argument.
 - Here's an example systemd service definition:
-```
+```python
 [Unit]
 Description=lidraughts-bot
 After=network-online.target
