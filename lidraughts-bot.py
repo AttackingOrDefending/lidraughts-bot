@@ -284,13 +284,14 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                 old_moves = moves
 
                 if not is_game_over(board) and is_engine_move(game, board):
+                    if len(board.move_stack) < 2:
+                        conversation.send_message("player", hello)
                     fake_thinking(config, board, game)
                     print_move_number(board)
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
                     draw_offered = check_for_draw_offer(game)
                     if len(board.move_stack) < 2:
-                        conversation.send_message("player", hello)
                         best_move = choose_first_move(engine, board, draw_offered)
                     elif is_correspondence:
                         best_move = choose_move_time(engine, board, correspondence_move_time, draw_offered)
