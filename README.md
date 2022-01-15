@@ -50,18 +50,143 @@ pip install -r requirements.txt
 - **NOTE: You won't see this token again on Lidraughts, so do save it.**
 
 ## Setup Engine
-- Place your engine(s) in the `engine.dir` directory.
-- In `config.yml` file, enter the binary name as the `engine.name` field (In Windows you may need to type a name with `.exe`, like `scan.exe`).
+- Place your engine(s) in the `engine: dir` directory
+- In `config.yml`, enter the binary name as the `engine: name` field (In Windows you may need to type a name with ".exe", like "scan.exe")
+
+### Engine Configuration
+Besides the above, there are many possible options within `config.yml` for configuring the engine for use with lidraughts-bot.
+- `protocol`: Specify which protocol your engine uses. Choices are
+    1. `"hub"` for the [Hub](https://github.com/rhalbersma/scan/blob/master/protocol.txt)
+    2. `"dxp"` for the [DXP](http://www.mesander.nl/damexchange/edxpmain.htm)
+    3. `"cb"` for the [CheckerBoard](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_reference.htm)
+    4. `"homemade"` if you want to write your own engine in Python within lidraughts-bot. See [**Creating a homemade bot**](#creating-a-homemade-bot) below.
+- `ponder`: Specify whether your bot will ponder--i.e., think while the bot's opponent is choosing a move.
+- `engine_options`: Command line options to pass to the engine on startup. For example, the `config.yml.default` has the configuration
+```yml
+  engine_options:
+    cpuct: 3.1
+```
+This would create the command-line option `--cpuct=3.1` to be used when starting the engine, like this for the engine lc0: `lc0 --cpuct=3.1` (no draughts equivalent). Any number of options can be listed here, each getting their own command-line option.
+- `hub_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When Hub engines start, they print a list of configurations that can modify their behavior. For example, Scan 3.1 prints the following when run at the command line:
+```
+id name=Scan version=3.1 author="Fabien Letouzey" country=France
+param name=variant value=normal type=enum values="normal killer bt frisian losing"
+param name=book value=true type=bool
+param name=book-ply value=4 type=int min=0 max=20
+param name=book-margin value=4 type=int min=0 max=100
+param name=ponder value=false type=bool
+param name=threads value=1 type=int min=1 max=16
+param name=tt-size value=24 type=int min=16 max=30
+param name=bb-size value=0 type=int min=0 max=7
+wait
+```
+Any of the names following `param name=` can be listed in `hub_options` in order to configure the Scan engine.
+```yml
+  hub_options:
+    book-ply: 15
+    book-margin: 10
+```
+The exception to this are the options `variant`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `hub_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't understand the option. The word after `type` indicates the expected type of the options: `string` for a text string, `int` for a numeric value, `bool` for a boolean True/False value.
+
+One last option is `go_commands`. Beneath this option, arguments to the Hub `go` command can be passed. For example,
+```yml
+  go_commands:
+    move-time: 1000
+```
+will send `level move-time=1000` to inform the engine on the time it should use.
+
+- `dxp_options`: A list of options to send to pydraughts about the engine. These are:
+```
+engine-opened
+ip
+port
+wait-to-open-time
+max-moves
+initial-time
+```
+The exceptions to this are the options `max-moves`, and `initial-time`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `dxp_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't know how to handle the option.
+
+- `cb_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When CB engines start, they print a list of configurations that can modify their behavior. Some possible options are:
+```
+hashsize
+book
+dbmbytes
+```
+There is also `divide-time-by` which is sent to pydraughts.
+
+- `abort_time`: How many seconds to wait before aborting a game due to opponent inaction. This only applies during the first six moves of the game.
+- `fake_think_time`: Artificially slow down the engine to simulate a person thinking about a move. The amount of thinking time decreases as the game goes on.
+- `rate_limiting_delay`: For extremely fast games, the lidraughts.org servers may respond with an error if too many moves are played to quickly. This option avoids this problem by pausing for a specified number of milliseconds after submitting a move before making the next move.
+- `move_overhead`: To prevent losing on time due to network lag, subtract this many milliseconds from the time to think on each move.
+
+- `correspondence` These options control how the engine behaves during correspondence games.
+  - `move_time`: How many seconds to think for each move.
+  - `checkin_period`: How often (in seconds) to reconnect to games to check for new moves after disconnecting.
+  - `disconnect_time`: How many seconds to wait after the bot makes a move for an opponent to make a move. If no move is made during the wait, disconnect from the game.
+  - `ponder`: Whether the bot should ponder during the above waiting period.
+
+- `challenge`: Control what kind of games for which the bot should accept challenges. All of the following options must be satisfied by a challenge to be accepted.
+  - `concurrency`: The maximum number of games to play simultaneously.
+  - `sort_by`: Whether to start games by the best rated/titled opponent `"best"` or by first-come-first-serve `"first"`.
+  - `accept_bot`: Whether to accept challenges from other bots.
+  - `only_bot`: Whether to only accept challenges from other bots.
+  - `max_increment`: The maximum value of time increment.
+  - `min_increment`: The minimum value of time increment.
+  - `max_base`: The maximum base time for a game.
+  - `min_base`: The minimum base time for a game.
+  - `variants`: An indented list of chess variants that the bot can handle.
+```yml
+  variants:
+    - standard
+    - fromPosition
+    - breakthrough
+    # etc.
+```
+  - `time_controls`: An indented list of acceptable time control types from `bullet` to `correspondence`.
+```yml
+  time_controls:
+    - bullet
+    - blitz
+    - rapid
+    - classical
+    - correpondence
+```
+  - `modes`: An indented list of acceptable game modes (`rated` and/or `casual`).
+```yml
+  modes:
+    -rated
+    -casual
+```
+  - `greeting`: Send messages via chat to the bot's opponent. The string `{me}` will be replaced by the bot's lichess account name. The string `{opponent}` will be replaced by the opponent's lichess account name. Any other word between curly brackets will be removed. If you want to put a curly bracket in the message, use two: `{{` or `}}`.
+    - `hello`: Message to send to opponent before the bot makes its first move.
+    - `goodbye`: Message to send to opponent once the game is over.
+```yml
+  greeting:
+    hello: Hi, {opponent}! I'm {me}. Good luck!
+    goodbye: Good game!
+```
 
 ## Lidraughts Upgrade to Bot Account
 **WARNING: This is irreversible. [Read more about upgrading to bot account](https://lidraughts.org/api#operation/botAccountUpgrade).**
 - run `python lichess-bot.py -u`.
 
+## To Run
+After activating the virtual environment created in the installation steps (the `source` line for Linux and Macs or the `activate` script for Windows), run
+```
+python lidraughts-bot.py
+```
+The working directory for the engine execution will be the lidraughts-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lidraughts-bot directory.
+
+To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lichess-bot:
+```
+python lidraughts-bot.py -v
+```
+
 ## To Quit
 - Press `CTRL+C`.
 - It may take some time to quit.
 
-## Creating a homemade bot
+## <a name="creating-a-homemade-bot"></a> Creating a homemade bot
 As an alternative to creating an entire chess engine and implementing one of the communiciation protocols (`Hub`, `DXP` or `CB`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
 
 Steps to create a homemade bot:
@@ -75,7 +200,7 @@ Steps to create a homemade bot:
 The examples just implement `search`.
 4. In the `config.yml`, change the name from `engine_name` to the name of your class
     - In this case, you could change it to:
-                                    
+
         `name: "RandomMove"`
 
 ## Tips & Tricks
