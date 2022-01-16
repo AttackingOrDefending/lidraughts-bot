@@ -16,6 +16,7 @@ def create_engine(config, variant, initial_time):
     engine_path = os.path.normpath(os.path.expanduser(os.path.join(cfg["dir"], cfg["name"])))
     engine_type = cfg.get("protocol")
     engine_options = cfg.get("engine_options")
+    draw_or_resign = cfg.get("draw_or_resign") or {}
     commands = [engine_path, cfg["engine_arguement"]]
     if engine_options:
         for k, v in engine_options.items():
@@ -37,12 +38,15 @@ def create_engine(config, variant, initial_time):
     options = cfg.get(engine_type + "_options", {}) or {}
     options['variant'] = variant
     options['initial-time'] = initial_time
-    return Engine(commands, options, stderr)
+    return Engine(commands, options, stderr, draw_or_resign)
 
 
 class EngineWrapper:
-    def __init__(self, commands, options, stderr):
-        pass
+    def __init__(self, commands, options, stderr, draw_or_resign):
+        self.scores = []
+        self.draw_or_resign = draw_or_resign
+        self.go_commands = options.pop("go_commands", {}) or {}
+        self.last_move_info = {}
 
     def search_for(self, board, movetime, draw_offered):
         return self.search(board, Limit(movetime=movetime // 1000), False, draw_offered)
@@ -64,6 +68,9 @@ class EngineWrapper:
                            nodes=cmds.get("nodes"),
                            movetime=movetime)
         return self.search(board, time_limit, ponder, draw_offered)
+    
+    def offer_draw_or_resign(self, result, board):
+        return result
 
     def search(self, board, time_limit, ponder, draw_offered):
         pass
@@ -94,9 +101,8 @@ class EngineWrapper:
 
 
 class HubEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr):
-        self.last_move_info = {}
-        self.go_commands = options.pop("go_commands", {}) or {}
+    def __init__(self, commands, options, stderr, draw_or_resign):
+        super().__init__(commands, options, stderr, draw_or_resign)
         self.engine = hub_engine(commands)
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
@@ -123,6 +129,8 @@ class HubEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         result = self.engine.play(board, time_limit, ponder=ponder)
         self.last_move_info = result.info
+        self.scores.append(self.last_move_info.get("score", float('nan')))
+        result = self.offer_draw_or_resign(result, board)
         self.print_stats()
         return result
 
@@ -140,9 +148,8 @@ class HubEngine(EngineWrapper):
 
 
 class DXPEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr):
-        self.last_move_info = {}
-        self.go_commands = options.pop("go_commands", {}) or {}
+    def __init__(self, commands, options, stderr, draw_or_resign):
+        super().__init__(commands, options, stderr, draw_or_resign)
         self.engine = dxp_engine(commands, options)
 
     def search_for(self, board, movetime, draw_offered):
@@ -162,9 +169,8 @@ class DXPEngine(EngineWrapper):
 
 
 class CheckerBoardEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr):
-        self.last_move_info = {}
-        self.go_commands = options.pop("go_commands", {}) or {}
+    def __init__(self, commands, options, stderr, draw_or_resign):
+        super().__init__(commands, options, stderr, draw_or_resign)
         self.engine = cb_engine(commands)
         if options:
             for name in options:
@@ -173,6 +179,8 @@ class CheckerBoardEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         result = self.engine.play(board, time_limit)
         self.last_move_info = result.info
+        self.scores.append(self.last_move_info.get("score", float('nan')))
+        result = self.offer_draw_or_resign(result, board)
         self.print_stats()
         return result
 
