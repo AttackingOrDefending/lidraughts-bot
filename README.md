@@ -61,6 +61,14 @@ Besides the above, there are many possible options within `config.yml` for confi
     3. `"cb"` for the [CheckerBoard](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_reference.htm)
     4. `"homemade"` if you want to write your own engine in Python within lidraughts-bot. See [**Creating a homemade bot**](#creating-a-homemade-bot) below.
 - `ponder`: Specify whether your bot will ponder--i.e., think while the bot's opponent is choosing a move.
+- `draw_or_resign`: This section allows your bot to resign or offer/accept draw based on the evaluation by the engine. XBoard engines can resign and offer/accept draw without this feature enabled.
+    - `resign_enabled`: Whether the bot is allowed to resign based on the evaluation.
+    - `resign_score`: The engine evaluation has to be less than or equal to `resign_score` for the bot to resign.
+    - `resign_moves`: The evaluation has to be less than or equal to `resign_score` for `resign_moves` amount of moves for the bot to resign.
+    - `offer_draw_enabled`: Whether the bot is allowed to offer/accept draw based on the evaluation.
+    - `offer_draw_score`: The absolute value of the engine evaluation has to be less than or equal to `offer_draw_score` for the bot to offer/accept draw.
+    - `offer_draw_moves`: The absolute value of the evaluation has to be less than or equal to `offer_draw_score` for `offer_draw_moves` amount of moves for the bot to offer/accept draw.
+    - `offer_draw_pieces`: The bot only offers/accepts draws if the position has less than or equal to `offer_draw_pieces` pieces.
 - `engine_options`: Command line options to pass to the engine on startup. For example, the `config.yml.default` has the configuration
 ```yml
   engine_options:
