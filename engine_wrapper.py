@@ -151,7 +151,7 @@ class HubEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         result = self.engine.play(board, time_limit, ponder=ponder)
         self.last_move_info = result.info
-        self.scores.append(self.last_move_info.get("score", float('nan')))
+        self.scores.append(self.last_move_info.get("score", {"win": 1}))
         result = self.offer_draw_or_resign(result, board)
         self.print_stats()
         return result
@@ -201,7 +201,7 @@ class CheckerBoardEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         result = self.engine.play(board, time_limit)
         self.last_move_info = result.info
-        self.scores.append(self.last_move_info.get("score", float('nan')))
+        self.scores.append(self.last_move_info.get("score", {"win": 1}))
         result = self.offer_draw_or_resign(result, board)
         self.print_stats()
         return result
