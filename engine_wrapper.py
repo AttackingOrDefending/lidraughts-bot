@@ -199,9 +199,10 @@ class CheckerBoardEngine(EngineWrapper):
                 self.engine.setoption(name, options[name])
 
     def search(self, board, time_limit, ponder, draw_offered):
+        cb_result_to_score = {0: 0, 1: 100, 2: -100, 3: 100}
         result = self.engine.play(board, time_limit)
         self.last_move_info = result.info
-        self.scores.append(self.last_move_info.get("score", {"win": 1}))
+        self.scores.append(cb_result_to_score[self.last_move_info.get("result", 1)])
         result = self.offer_draw_or_resign(result, board)
         self.print_stats()
         return result
