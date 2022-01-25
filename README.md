@@ -50,8 +50,13 @@ pip install -r requirements.txt
 - **NOTE: You won't see this token again on Lidraughts, so do save it.**
 
 ## Setup Engine
-- Place your engine(s) in the `engine: dir` directory
-- In `config.yml`, enter the binary name as the `engine: name` field (In Windows you may need to type a name with ".exe", like "scan.exe")
+Within the file `config.yml`:
+- Enter the directory containing the engine executable in the `engine: dir` field.
+- Enter the executable name in the `engine: name` field (In Windows you may need to type a name with ".exe", like "scan.exe")
+- If you want the engine to run in a different directory (e.g., if the engine needs to read or write files at a certain location), enter that directory in the `engine: working_dir` field.
+  - If this field is blank or missing, the current directory will be used.
+
+As an optional convenience, there is a folder named `engines` within the lichess-bot folder where you can copy your engine and all the files it needs. This is the default executable location in the `config.yml.default` file.
 
 ### Engine Configuration
 Besides the above, there are many possible options within `config.yml` for configuring the engine for use with lidraughts-bot.
