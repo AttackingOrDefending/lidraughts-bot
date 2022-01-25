@@ -2,8 +2,9 @@ token: "xxxxxxxxxxxxxxxx"    # Lidraughts OAuth2 Token.
 url: "https://lidraughts.org/"  # Lidraughts base URL.
 
 engine:                      # Engine settings.
-  dir: "./engines/"          # Directory containing engines, relative to this project.
+  dir: "./engines/"          # Directory containing the engine. This can be an absolute path or one relative to lidraughts-bot/.
   name: "engine_name"        # Binary name of the engine to use.
+  working_dir: ""            # Directory where the chess engine will read and write files. If blank or missing, the current directory is used.
   engine_arguement: "hub"
   protocol: "hub"            # "hub", "dxp", "cb" (checkerboard) or "strategy"
   ponder: true               # Think on opponent's time.
