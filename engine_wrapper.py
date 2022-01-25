@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 def create_engine(config, variant, initial_time):
     cfg = config["engine"]
     engine_path = os.path.normpath(os.path.expanduser(os.path.join(cfg["dir"], cfg["name"])))
+    engine_working_dir = cfg.get("working_dir") or os.getcwd()
     engine_type = cfg.get("protocol")
     engine_options = cfg.get("engine_options")
     draw_or_resign = cfg.get("draw_or_resign") or {}
@@ -38,11 +39,11 @@ def create_engine(config, variant, initial_time):
     options = cfg.get(engine_type + "_options", {}) or {}
     options['variant'] = variant
     options['initial-time'] = initial_time
-    return Engine(commands, options, stderr, draw_or_resign)
+    return Engine(commands, options, stderr, draw_or_resign, cwd=engine_working_dir)
 
 
 class EngineWrapper:
-    def __init__(self, commands, options, stderr, draw_or_resign):
+    def __init__(self, options, draw_or_resign):
         self.scores = []
         self.draw_or_resign = draw_or_resign
         self.go_commands = options.pop("go_commands", {}) or {}
@@ -123,9 +124,9 @@ class EngineWrapper:
 
 
 class HubEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr, draw_or_resign):
-        super().__init__(commands, options, stderr, draw_or_resign)
-        self.engine = hub_engine(commands)
+    def __init__(self, commands, options, stderr, draw_or_resign, cwd=None):
+        super().__init__(options, draw_or_resign)
+        self.engine = hub_engine(commands, cwd=cwd)
 
         if 'bb-size' in options and options['bb-size'] == 'auto':
             if 'variant' in options and options['variant'] != 'normal':
@@ -170,7 +171,7 @@ class HubEngine(EngineWrapper):
 
 
 class DXPEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr, draw_or_resign):
+    def __init__(self, commands, options, stderr, draw_or_resign, cwd=None):
         super().__init__(commands, options, stderr, draw_or_resign)
         self.engine = dxp_engine(commands, options)
 
@@ -191,7 +192,7 @@ class DXPEngine(EngineWrapper):
 
 
 class CheckerBoardEngine(EngineWrapper):
-    def __init__(self, commands, options, stderr, draw_or_resign):
+    def __init__(self, commands, options, stderr, draw_or_resign, cwd=None):
         super().__init__(commands, options, stderr, draw_or_resign)
         self.engine = cb_engine(commands)
         if options:
