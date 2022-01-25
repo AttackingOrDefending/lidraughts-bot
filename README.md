@@ -26,13 +26,13 @@ python3 -m pip install -r requirements.txt
 - **NOTE: Only Python 3.7 or later is supported!**
 - If you don't have Python, you may [download it here](https://www.python.org/downloads/). When installing it, enable "add Python to PATH", then go to custom installation (this may be not necessary, but on some computers it won't work otherwise) and enable all options (especially "install for all users"), except the last. It's better to install Python in a path without spaces, like "C:\Python\".
 - To type commands it's better to use PowerShell. Go to Start menu and type "PowerShell" (you may use "cmd" too, but sometimes it may not work).
-- Then you may need to upgrade pip. Execute `python -m pip install --upgrade pip` in PowerShell.
+- Then you may need to upgrade pip. Execute `python3 -m pip install --upgrade pip` in PowerShell.
 - Download the repo into lidraughts-bot directory.
 - Navigate to the directory in PowerShell: `cd [folder's adress]` (example, `cd C:\draughts\lidraughts-bot`).
 - Install virtualenv: `pip install virtualenv`.
 - Setup virtualenv:
 ```python
-python -m venv .venv # If this fails you probably need to add Python to your PATH.
+python3 -m venv .venv # If this fails you probably need to add Python3 to your PATH.
 ./.venv/Scripts/Activate.ps1 # `.\.venv\Scripts\activate.bat` should work in cmd in administator mode. This may not work on Windows, and in this case you need to execute "Set-ExecutionPolicy RemoteSigned" first and choose "Y" there (you may need to run Powershell as administrator). After you executed the script, change execution policy back with "Set-ExecutionPolicy Restricted" and pressing "Y".
 pip install -r requirements.txt
 ```
@@ -181,18 +181,18 @@ There is also `divide-time-by` which is sent to pydraughts.
 
 ## Lidraughts Upgrade to Bot Account
 **WARNING: This is irreversible. [Read more about upgrading to bot account](https://lidraughts.org/api#operation/botAccountUpgrade).**
-- run `python lichess-bot.py -u`.
+- run `python3 lichess-bot.py -u`.
 
 ## To Run
 After activating the virtual environment created in the installation steps (the `source` line for Linux and Macs or the `activate` script for Windows), run
 ```
-python lidraughts-bot.py
+python3 lidraughts-bot.py
 ```
 The working directory for the engine execution will be the lidraughts-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lidraughts-bot directory.
 
 To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lichess-bot:
 ```
-python lidraughts-bot.py -v
+python3 lidraughts-bot.py -v
 ```
 
 ## To Quit
