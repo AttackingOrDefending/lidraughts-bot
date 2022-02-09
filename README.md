@@ -82,7 +82,7 @@ Besides the above, there are many possible options within `config.yml` for confi
     cpuct: 3.1
 ```
 This would create the command-line option `--cpuct=3.1` to be used when starting the engine, like this for the engine lc0: `lc0 --cpuct=3.1` (no draughts equivalent). Any number of options can be listed here, each getting their own command-line option.
-- `hub_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When Hub engines start, they print a list of configurations that can modify their behavior. For example, Scan 3.1 prints the following when run at the command line:
+- `hub_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When Hub engines start, they print a list of configurations that can modify their behavior after receiving the string "hub". For example, to find out what options Scan 3.1 supports, run the executable in a terminal, type `hub`, and press Enter. The engine will print the following when run at the command line:
 ```
 id name=Scan version=3.1 author="Fabien Letouzey" country=France
 param name=variant value=normal type=enum values="normal killer bt frisian losing"
@@ -121,13 +121,13 @@ initial-time
 ```
 The exceptions to this are the options `max-moves`, and `initial-time`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `dxp_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't know how to handle the option.
 
-- `cb_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When CB engines start, they print a list of configurations that can modify their behavior. Some possible options are:
+- `cb_options`: A list of options to pass to a CheckerBoard engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. There are no standard options for the engine parameters. Some possible options are:
 ```
 hashsize
 book
 dbmbytes
 ```
-There is also `divide-time-by` which is sent to pydraughts.
+See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_reference.htm) for many possible options for the engine. There is also `divide-time-by` which is sent to pydraughts.
 
 - `abort_time`: How many seconds to wait before aborting a game due to opponent inaction. This only applies during the first six moves of the game.
 - `fake_think_time`: Artificially slow down the engine to simulate a person thinking about a move. The amount of thinking time decreases as the game goes on.
