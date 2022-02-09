@@ -6,7 +6,7 @@ requests>=2.25.1
 urllib3==1.26.8
 backoff==1.11.1
 msl-loadlib==0.9.0
-pydraughts==0.4.2
+pydraughts==0.4.3
 
 # Requirements for tests
 pytest==7.0.0
