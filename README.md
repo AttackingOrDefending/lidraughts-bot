@@ -1,5 +1,7 @@
 # lidraughts-bot
-[![Python Build](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-build.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-build.yml) [![CodeQL](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml)
+[![Python Build](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-build.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-build.yml)
+[![Python Test](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-test.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-test.yml)
+[![CodeQL](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml)
 
 A bridge between [Lidraughts BOT API](https://lidraughts.org/api#tag/Bot) and bots.
 
