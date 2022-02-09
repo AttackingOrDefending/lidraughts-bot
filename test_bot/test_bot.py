@@ -198,4 +198,4 @@ def test_scan():
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree('logs')
     lidraughts_bot.logger.info("Finished Testing Scan")
-    assert win
+    assert win == "1"
