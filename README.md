@@ -8,7 +8,7 @@ A bridge between [Lidraughts BOT API](https://lidraughts.org/api#tag/Bot) and bo
 ## How to Install
 
 ### Mac/Linux:
-- **NOTE: Only Python 3.7 or later is supported!**
+- **NOTE: Only Python 3.8 or later is supported!**
 - Download the repo into lidraughts-bot directory.
 - Navigate to the directory in cmd/Terminal: `cd lidraughts-bot`.
 - Install pip: `apt install python3-pip`.
@@ -25,7 +25,7 @@ python3 -m pip install -r requirements.txt
 
 ### Windows:
 - [Here is a video on how to install the bot](https://youtu.be/w-aJFk00POQ) (it is for lichess-bot but most steps are the same). Or you may proceed to the following steps.
-- **NOTE: Only Python 3.7 or later is supported!**
+- **NOTE: Only Python 3.8 or later is supported!**
 - If you don't have Python, you may [download it here](https://www.python.org/downloads/). When installing it, enable "add Python to PATH", then go to custom installation (this may be not necessary, but on some computers it won't work otherwise) and enable all options (especially "install for all users"), except the last. It's better to install Python in a path without spaces, like "C:\Python\".
 - To type commands it's better to use PowerShell. Go to Start menu and type "PowerShell" (you may use "cmd" too, but sometimes it may not work).
 - Then you may need to upgrade pip. Execute `python3 -m pip install --upgrade pip` in PowerShell.
