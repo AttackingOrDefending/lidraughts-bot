@@ -54,6 +54,18 @@ def download_kr():
     shutil.copyfile('./TEMP/weights.bin', 'weights.bin')
 
 
+if os.path.exists("TEMP"):
+    shutil.rmtree("TEMP")
+os.mkdir("TEMP")
+if platform == "win32":
+    download_scan()
+    download_kr()
+logging_level = lidraughts_bot.logging.INFO
+lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
+lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
+lidraughts_bot.logger.info("Downloaded engines")
+
+
 def run_bot(CONFIG, logging_level, hub_engine_path):
     lidraughts_bot.logger.info(lidraughts_bot.intro())
     li = lidraughts_bot.lidraughts.Lidraughts(CONFIG["token"], CONFIG["url"], lidraughts_bot.__version__)
@@ -176,15 +188,6 @@ def test_scan():
     if platform != 'win32':
         assert True
         return
-    if os.path.exists('TEMP'):
-        shutil.rmtree('TEMP')
-    os.mkdir('TEMP')
-    download_scan()
-    download_kr()
-    logging_level = lidraughts_bot.logging.INFO
-    lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
-    lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
-    lidraughts_bot.logger.info("Downloaded engines")
     if os.path.exists('logs'):
         shutil.rmtree('logs')
     os.mkdir('logs')
@@ -198,4 +201,33 @@ def test_scan():
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree('logs')
     lidraughts_bot.logger.info("Finished Testing Scan")
+    assert win == "1"
+
+
+@pytest.mark.timeout(150, method="thread")
+def test_homemade():
+    if platform != 'win32':
+        assert True
+        return
+    with open("strategies.py") as file:
+        strategies = file.read()
+        original_strategies = strategies
+        strategies = strategies.split("\n")
+    strategies += ["class Scan(ExampleEngine):", "    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):", "        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)", f"        self.engine = chess.engine.SimpleEngine.popen_uci('./TEMP/scan{file_extension}')", "    def search(self, board, time_limit, *args):", "        return self.engine.play(board, time_limit, False)"]
+    with open("strategies.py", "w") as file:
+        file.write("\n".join(strategies))
+    if os.path.exists('logs'):
+        shutil.rmtree('logs')
+    os.mkdir('logs')
+    with open("./config.yml.default") as file:
+        CONFIG = yaml.safe_load(file)
+    CONFIG["token"] = ""
+    CONFIG["engine"]["name"] = "Scan"
+    CONFIG["engine"]["protocol"] = "homemade"
+    hub_engine_path = f'./TEMP/kr_hub{file_extension}'
+    win = run_bot(CONFIG, logging_level, hub_engine_path)
+    shutil.rmtree('logs')
+    with open("strategies.py", "w") as file:
+        file.write(original_strategies)
+    lidraughts_bot.logger.info("Finished Testing Homemade")
     assert win == "1"
