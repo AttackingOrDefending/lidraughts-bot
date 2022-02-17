@@ -6,6 +6,7 @@ And some handy classes to extend
 import random
 from engine_wrapper import EngineWrapper
 import draughts
+import draughts.engine
 from draughts.engine import PlayResult
 
 
