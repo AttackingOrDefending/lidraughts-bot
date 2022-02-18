@@ -6,6 +6,7 @@ And some handy classes to extend
 import random
 from engine_wrapper import EngineWrapper
 import draughts
+import draughts.engine
 from draughts.engine import PlayResult
 
 
@@ -45,7 +46,7 @@ class MinimalEngine(EngineWrapper):
     however you can also change other methods like
     `notify`, `first_search`, `get_time_control`, etc.
     """
-    def __init__(self, commands, options, stderr, draw_or_resign, name=None):
+    def __init__(self, commands, options, stderr, draw_or_resign, name=None, **popen_args):
         super().__init__(options, draw_or_resign)
 
         self.engine_name = self.__class__.__name__ if name is None else name
