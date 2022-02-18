@@ -54,6 +54,17 @@ def download_kr():
     shutil.copyfile('./TEMP/weights.bin', 'weights.bin')
 
 
+if os.path.exists('TEMP'):
+    shutil.rmtree('TEMP')
+os.mkdir('TEMP')
+download_scan()
+download_kr()
+logging_level = lidraughts_bot.logging.INFO
+lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
+lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
+lidraughts_bot.logger.info("Downloaded engines")
+
+
 def run_bot(CONFIG, logging_level, hub_engine_path):
     lidraughts_bot.logger.info(lidraughts_bot.intro())
     li = lidraughts_bot.lidraughts.Lidraughts(CONFIG["token"], CONFIG["url"], lidraughts_bot.__version__)
@@ -176,15 +187,6 @@ def test_scan():
     if platform != 'win32':
         assert True
         return
-    if os.path.exists('TEMP'):
-        shutil.rmtree('TEMP')
-    os.mkdir('TEMP')
-    download_scan()
-    download_kr()
-    logging_level = lidraughts_bot.logging.INFO
-    lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
-    lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
-    lidraughts_bot.logger.info("Downloaded engines")
     if os.path.exists('logs'):
         shutil.rmtree('logs')
     os.mkdir('logs')
@@ -213,15 +215,6 @@ def test_homemade():
     strategies += ["class Scan(ExampleEngine):", "    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):", "        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)", f"        self.engine = draughts.engine.HubEngine(['./TEMP/scan{file_extension}', 'hub'])", f"        self.engine.init()", "    def search(self, board, time_limit, *args):", "        return self.engine.play(board, time_limit, False)"]
     with open("strategies.py", "w") as file:
         file.write("\n".join(strategies))
-    if os.path.exists('TEMP'):
-        shutil.rmtree('TEMP')
-    os.mkdir('TEMP')
-    download_scan()
-    download_kr()
-    logging_level = lidraughts_bot.logging.INFO
-    lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
-    lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
-    lidraughts_bot.logger.info("Downloaded engines")
     if os.path.exists('logs'):
         shutil.rmtree('logs')
     os.mkdir('logs')
