@@ -59,7 +59,7 @@ def watch_control_stream(control_queue, li):
             lines = response.iter_lines()
             for line in lines:
                 if line:
-                    event = json.loads(line.decode('utf-8'))
+                    event = json.loads(line.decode("utf-8"))
                     control_queue.put_nowait(event)
                 else:
                     control_queue.put_nowait({"type": "ping"})
@@ -90,7 +90,7 @@ def logging_listener_proc(queue, configurer, level, log_filename):
 
 
 def game_logging_configurer(queue, level):
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
         h = logging.handlers.QueueHandler(queue)
         root = logging.getLogger()
         root.handlers.clear()
@@ -101,7 +101,7 @@ def game_logging_configurer(queue, level):
 def start(li, user_profile, engine_factory, config, logging_level, log_filename, one_game=False):
     challenge_config = config["challenge"]
     max_games = challenge_config.get("concurrency", 1)
-    logger.info("You're now connected to {} and awaiting challenges.".format(config["url"]))
+    logger.info(f"You're now connected to {config['url']} and awaiting challenges.")
     manager = multiprocessing.Manager()
     challenge_queue = manager.list()
     control_queue = manager.Queue()
@@ -113,7 +113,7 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename,
     correspondence_pinger.start()
     correspondence_queue = manager.Queue()
     correspondence_queue.put("")
-    startup_correspondence_games = [game["gameId"] for game in li.get_ongoing_games() if game["perf"] == 'correspondence']
+    startup_correspondence_games = [game["gameId"] for game in li.get_ongoing_games() if game["perf"] == "correspondence"]
     wait_for_correspondence_ping = False
 
     busy_processes = 0
@@ -143,7 +143,7 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename,
                 break
             elif event["type"] == "local_game_done":
                 busy_processes -= 1
-                logger.info("+++ Process Free. Total Queued: {}. Total Used: {}".format(queued_processes, busy_processes))
+                logger.info(f"+++ Process Free. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                 if one_game:
                     break
             elif event["type"] == "challenge":
@@ -169,20 +169,20 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename,
                         if challenge.get("only_bot", False) and not chlng.challenger_is_bot:
                             reason = "onlyBot"
                         li.decline_challenge(chlng.id, reason=reason)
-                        logger.info("Decline {} for reason '{}'".format(chlng, reason))
+                        logger.info(f"Decline {chlng} for reason '{reason}'")
                     except Exception:
                         pass
             elif event["type"] == "gameStart":
                 game_id = event["game"]["id"]
                 if game_id in startup_correspondence_games:
-                    logger.info("--- Enqueue {}".format(config["url"] + game_id))
+                    logger.info(f'--- Enqueue {config["url"] + game_id}')
                     correspondence_queue.put(game_id)
                     startup_correspondence_games.remove(game_id)
                 else:
                     if queued_processes > 0:
                         queued_processes -= 1
                     busy_processes += 1
-                    logger.info("--- Process Used. Total Queued: {}. Total Used: {}".format(queued_processes, busy_processes))
+                    logger.info(f"--- Process Used. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                     pool.apply_async(play_game, [li, game_id, control_queue, engine_factory, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level])
 
             is_correspondence_ping = event["type"] == "correspondence_ping" 
@@ -203,19 +203,19 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename,
                             break
                     else:
                         busy_processes += 1
-                        logger.info("--- Process Used. Total Queued: {}. Total Used: {}".format(queued_processes, busy_processes))
+                        logger.info(f"--- Process Used. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                         pool.apply_async(play_game, [li, game_id, control_queue, engine_factory, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level])
 
-            while ((queued_processes + busy_processes) < max_games and challenge_queue):  # keep processing the queue until empty or max_games is reached
+            while (queued_processes + busy_processes) < max_games and challenge_queue:  # keep processing the queue until empty or max_games is reached
                 chlng = challenge_queue.pop(0)
                 try:
-                    logger.info("Accept {}".format(chlng))
+                    logger.info(f"Accept {chlng}")
                     queued_processes += 1
                     li.accept_challenge(chlng.id)
-                    logger.info("--- Process Queue. Total Queued: {}. Total Used: {}".format(queued_processes, busy_processes))
+                    logger.info(f"--- Process Queue. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                 except (HTTPError, ReadTimeout) as exception:
                     if isinstance(exception, HTTPError) and exception.response.status_code == 404:  # ignore missing challenge
-                        logger.info("Skip missing {}".format(chlng))
+                        logger.info(f"Skip missing {chlng}")
                     queued_processes -= 1
 
             control_queue.task_done()
@@ -241,16 +241,16 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     lines = response.iter_lines()
 
     # Initial response of stream will be the full game info. Store it
-    initial_state = json.loads(next(lines).decode('utf-8'))
+    initial_state = json.loads(next(lines).decode("utf-8"))
     logger.debug(f"Initial state: {initial_state}")
     game = model.Game(initial_state, user_profile["username"], li.baseUrl, config.get("abort_time", 20))
 
-    initial_time = (game.state['wtime'] if game.my_color == "white" else game.state['btime']) / 1000
+    initial_time = (game.state["wtime"] if game.my_color == "white" else game.state["btime"]) / 1000
     variant = parse_variant(game.variant_name)
     engine = engine_factory(variant, initial_time)
     conversation = Conversation(game, engine, li, __version__, challenge_queue)
 
-    logger.info("+++ {}".format(game))
+    logger.info(f"+++ {game}")
 
     is_correspondence = game.perf_name == "Correspondence"
     correspondence_cfg = config.get("correspondence", {}) or {}
@@ -258,7 +258,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
 
     engine_cfg = config["engine"]
     ponder_cfg = correspondence_cfg if is_correspondence else engine_cfg
-    can_ponder = ponder_cfg.get('ponder', False) and engine_cfg['protocol'] in ['hub', 'strategy']
+    can_ponder = ponder_cfg.get("ponder", False) and engine_cfg["protocol"] in ["hub", "strategy"]
     move_overhead = config.get("move_overhead", 1000)
     move_overhead_inc = config.get("move_overhead_inc", 100)
     delay_seconds = config.get("rate_limiting_delay", 0)/1000
@@ -283,7 +283,7 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                 first_move = False
             else:
                 binary_chunk = next(lines)
-                upd = json.loads(binary_chunk.decode('utf-8')) if binary_chunk else None
+                upd = json.loads(binary_chunk.decode("utf-8")) if binary_chunk else None
             logger.debug(f"Game state: {upd}")
 
             u_type = upd["type"] if upd else "ping"
@@ -329,17 +329,17 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
                 elif len(board.move_stack) == 0:
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
-                wb = 'w' if board.whose_turn() == draughts.WHITE else 'b'
+                wb = "w" if board.whose_turn() == draughts.WHITE else "b"
                 game.ping(config.get("abort_time", 20), (upd[f"{wb}time"] + upd[f"{wb}inc"]) / 1000 + 60, correspondence_disconnect_time)
             elif u_type == "ping":
                 if is_correspondence and not is_engine_move(game, board) and game.should_disconnect_now():
                     break
                 elif game.should_abort_now():
-                    logger.info("Aborting {} by lack of activity".format(game.url()))
+                    logger.info(f"Aborting {game.url()} by lack of activity")
                     li.abort(game.id)
                     break
                 elif game.should_terminate_now():
-                    logger.info("Terminating {} by lack of activity".format(game.url()))
+                    logger.info(f"Terminating {game.url()} by lack of activity")
                     if game.is_abortable():
                         li.abort(game.id)
                     break
@@ -358,10 +358,10 @@ def play_game(li, game_id, control_queue, engine_factory, user_profile, config, 
     engine.kill_process()
 
     if is_correspondence and not is_game_over(board):
-        logger.info("--- Disconnecting from {}".format(game.url()))
+        logger.info(f"--- Disconnecting from {game.url()}")
         correspondence_queue.put(game_id)
     else:
-        logger.info("--- {} Game over".format(game.url()))
+        logger.info(f"--- {game.url()} Game over")
 
     control_queue.put_nowait({"type": "local_game_done"})
 
@@ -382,7 +382,7 @@ def parse_variant(variant):
 
 
 def choose_move_time(engine, board, search_time, draw_offered):
-    logger.info("Searching for time {}".format(search_time))
+    logger.info(f"Searching for time {search_time}")
     return engine.search_for(board, search_time, draw_offered)
 
 
@@ -404,7 +404,7 @@ def choose_move(engine, board, game, draw_offered, start_time, move_overhead, mo
         btime = max(0, btime - move_overhead - pre_move_time)
         binc = max(0, binc - move_overhead_inc)
 
-    logger.info("Searching for wtime {} btime {}".format(wtime, btime))
+    logger.info(f"Searching for wtime {wtime} btime {btime}")
     return engine.search_with_ponder(board, wtime, btime, winc, binc, False, draw_offered)
 
 
@@ -435,7 +435,7 @@ def start_pondering(engine, board, game, can_ponder, best_move, start_time, move
         best_move = engine.search_with_ponder(board, wtime, btime, winc, binc, True, False)
         ponder_results[game.id] = best_move
 
-    logger.info("Pondering for wtime {} btime {}".format(wtime, btime))
+    logger.info(f"Pondering for wtime {wtime} btime {btime}")
     ponder_thread = threading.Thread(target=ponder_thread_func, args=(game, engine, ponder_board, wtime, btime, winc, binc))
     ponder_thread.start()
     return ponder_thread, best_move.ponder.li_one_move
@@ -458,7 +458,7 @@ def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
 
 
 def check_for_draw_offer(game):
-    return game.state.get(f'{game.opponent_color[0]}draw', False)
+    return game.state.get(f"{game.opponent_color[0]}draw", False)
 
 
 def fake_thinking(config, board, game):
@@ -471,7 +471,7 @@ def fake_thinking(config, board, game):
 
 def print_move_number(board):
     logger.info("")
-    logger.info("move: {}".format(len(board.move_stack) // 2 + 1))
+    logger.info(f"move: {len(board.move_stack) // 2 + 1}")
 
 
 def is_engine_move(game, board):
@@ -493,11 +493,11 @@ def intro():
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Play on Lidraughts with a bot')
-    parser.add_argument('-u', action='store_true', help='Add this flag to upgrade your account to a bot account.')
-    parser.add_argument('-v', action='store_true', help='Verbose output. Changes log level from INFO to DEBUG.')
-    parser.add_argument('--config', help='Specify a configuration file (defaults to ./config.yml)')
-    parser.add_argument('-l', '--logfile', help="Log file to append logs to.", default=None)
+    parser = argparse.ArgumentParser(description="Play on Lidraughts with a bot")
+    parser.add_argument("-u", action="store_true", help="Add this flag to upgrade your account to a bot account.")
+    parser.add_argument("-v", action="store_true", help="Verbose output. Changes log level from INFO to DEBUG.")
+    parser.add_argument("--config", help="Specify a configuration file (defaults to ./config.yml)")
+    parser.add_argument("-l", "--logfile", help="Log file to append logs to.", default=None)
     args = parser.parse_args()
 
     logging_level = logging.DEBUG if args.v else logging.INFO
@@ -511,7 +511,7 @@ if __name__ == "__main__":
     user_profile = li.get_profile()
     username = user_profile["username"]
     is_bot = user_profile.get("title") == "BOT"
-    logger.info("Welcome {}!".format(username))
+    logger.info(f"Welcome {username}!")
 
     if args.u and not is_bot:
         is_bot = upgrade_account(li)
@@ -520,4 +520,4 @@ if __name__ == "__main__":
         engine_factory = partial(engine_wrapper.create_engine, CONFIG)
         start(li, user_profile, engine_factory, CONFIG, logging_level, args.logfile)
     else:
-        logger.error("{} is not a bot account. Please upgrade it to a bot account!".format(user_profile["username"]))
+        logger.error(f"{username} is not a bot account. Please upgrade it to a bot account!")
