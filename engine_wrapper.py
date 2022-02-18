@@ -21,7 +21,7 @@ def create_engine(config, variant, initial_time):
     commands = [engine_path, cfg["engine_arguement"]]
     if engine_options:
         for k, v in engine_options.items():
-            commands.append("--{}={}".format(k, v))
+            commands.append(f"--{k}={v}")
 
     stderr = None if cfg.get("silence_stderr", False) else subprocess.DEVNULL
 
@@ -36,9 +36,9 @@ def create_engine(config, variant, initial_time):
     else:
         raise ValueError(
             f"    Invalid engine type: {engine_type}. Expected hub, dxp, cb, or homemade.")
-    options = cfg.get(engine_type + "_options", {}) or {}
-    options['variant'] = variant
-    options['initial-time'] = initial_time
+    options = cfg.get(f"{engine_type}_options", {}) or {}
+    options["variant"] = variant
+    options["initial-time"] = initial_time
     return Engine(commands, options, stderr, draw_or_resign, cwd=engine_working_dir)
 
 
@@ -57,7 +57,7 @@ class EngineWrapper:
         movetime = cmds.get("movetime")
         if movetime is not None:
             movetime = float(movetime) // 1000
-        if board.get_fen()[0].lower() == 'w':
+        if board.get_fen()[0].lower() == "w":
             time = wtime
             inc = winc
         else:
@@ -81,16 +81,16 @@ class EngineWrapper:
                 else:
                     return -10000 - win
         
-        if self.draw_or_resign.get('offer_draw_enabled', False) and len(self.scores) >= self.draw_or_resign.get('offer_draw_moves', 5):
-            scores = self.scores[-self.draw_or_resign.get('offer_draw_moves', 5):]
+        if self.draw_or_resign.get("offer_draw_enabled", False) and len(self.scores) >= self.draw_or_resign.get("offer_draw_moves", 5):
+            scores = self.scores[-self.draw_or_resign.get("offer_draw_moves", 5):]
             pieces_on_board = len(list(filter(bool, board.board.pieces)))
-            scores_near_draw = lambda score: abs(mate_score_to_score(score)) <= self.draw_or_resign.get('offer_draw_score', 0)
-            if len(scores) == len(list(filter(scores_near_draw, scores))) and pieces_on_board <= self.draw_or_resign.get('offer_draw_pieces', 10):
+            scores_near_draw = lambda score: abs(mate_score_to_score(score)) <= self.draw_or_resign.get("offer_draw_score", 0)
+            if len(scores) == len(list(filter(scores_near_draw, scores))) and pieces_on_board <= self.draw_or_resign.get("offer_draw_pieces", 10):
                 result.draw_offered = True
 
-        if self.draw_or_resign.get('resign_enabled', False) and len(self.scores) >= self.draw_or_resign.get('resign_moves', 3):
-            scores = self.scores[-self.draw_or_resign.get('resign_moves', 3):]
-            scores_near_loss = lambda score: mate_score_to_score(score) <= self.draw_or_resign.get('resign_score', -1000)
+        if self.draw_or_resign.get("resign_enabled", False) and len(self.scores) >= self.draw_or_resign.get("resign_moves", 3):
+            scores = self.scores[-self.draw_or_resign.get("resign_moves", 3):]
+            scores_near_loss = lambda score: mate_score_to_score(score) <= self.draw_or_resign.get("resign_score", -1000)
             if len(scores) == len(list(filter(scores_near_loss, scores))):
                 result.resigned = True
         return result
@@ -128,11 +128,11 @@ class HubEngine(EngineWrapper):
         super().__init__(options, draw_or_resign)
         self.engine = hub_engine(commands, cwd=cwd)
 
-        if 'bb-size' in options and options['bb-size'] == 'auto':
-            if 'variant' in options and options['variant'] != 'normal':
-                variant = '_' + options['variant']
+        if "bb-size" in options and options["bb-size"] == "auto":
+            if "variant" in options and options["variant"] != "normal":
+                variant = f'_{options["variant"]}'
             else:
-                variant = ''
+                variant = ""
             for number in range(1, 7):
                 path = os.path.realpath(f"./data/bb{variant}/{number + 1}")
                 if not os.path.isdir(path):
@@ -141,7 +141,7 @@ class HubEngine(EngineWrapper):
                 number += 1
             if number == 1:
                 number = 0
-            options['bb-size'] = number
+            options["bb-size"] = number
 
         if options:
             for name in options:

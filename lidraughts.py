@@ -27,7 +27,7 @@ class Lidraughts:
     def __init__(self, token, url, version, logging_level):
         self.version = version
         self.header = {
-            "Authorization": "Bearer {}".format(token)
+            "Authorization": f"Bearer {token}"
         }
         self.baseUrl = url
         self.session = requests.Session()
@@ -46,7 +46,7 @@ class Lidraughts:
                           backoff_log_level=logging.DEBUG,
                           giveup_log_level=logging.DEBUG)
     def api_get(self, path):
-        logging.getLogger('backoff').setLevel(self.logging_level)
+        logging.getLogger("backoff").setLevel(self.logging_level)
         url = urljoin(self.baseUrl, path)
         response = self.session.get(url, timeout=2)
         response.raise_for_status()
@@ -60,7 +60,7 @@ class Lidraughts:
                           backoff_log_level=logging.DEBUG,
                           giveup_log_level=logging.DEBUG)
     def api_post(self, path, data=None, headers=None, params=None):
-        logging.getLogger('backoff').setLevel(self.logging_level)
+        logging.getLogger("backoff").setLevel(self.logging_level)
         url = urljoin(self.baseUrl, path)
         response = self.session.post(url, data=data, headers=headers, params=params, timeout=2)
         response.raise_for_status()
@@ -75,10 +75,10 @@ class Lidraughts:
     def make_move(self, game_id, move):
         for move_part in move.move.li_api_move:
             self.api_post(ENDPOINTS["move"].format(game_id, move_part),
-                          params={'offeringDraw': str(move.draw_offered).lower()})
+                          params={"offeringDraw": str(move.draw_offered).lower()})
 
     def chat(self, game_id, room, text):
-        payload = {'room': room, 'text': text}
+        payload = {"room": room, "text": text}
         return self.api_post(ENDPOINTS["chat"].format(game_id), data=payload)
 
     def abort(self, game_id):
@@ -111,5 +111,5 @@ class Lidraughts:
         self.api_post(ENDPOINTS["resign"].format(game_id))
 
     def set_user_agent(self, username):
-        self.header.update({"User-Agent": "lidraughts-bot/{} user:{}".format(self.version, username)})
+        self.header.update({"User-Agent": f"lidraughts-bot/{self.version} user:{username}"})
         self.session.headers.update(self.header)
