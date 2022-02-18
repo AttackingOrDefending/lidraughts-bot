@@ -210,7 +210,7 @@ def test_homemade():
         strategies = file.read()
         original_strategies = strategies
         strategies = strategies.split("\n")
-    strategies += ["class Scan(ExampleEngine):", "    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):", "        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)", f"        self.engine = draughts.engine.HubEngine(['./TEMP/scan{file_extension}', 'hub'])", "    def search(self, board, time_limit, *args):", "        return self.engine.play(board, time_limit, False)"]
+    strategies += ["class Scan(ExampleEngine):", "    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):", "        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)", f"        self.engine = draughts.engine.HubEngine(['./TEMP/scan{file_extension}', 'hub'])", f"        self.engine.init()", "    def search(self, board, time_limit, *args):", "        return self.engine.play(board, time_limit, False)"]
     with open("strategies.py", "w") as file:
         file.write("\n".join(strategies))
     if os.path.exists('TEMP'):
