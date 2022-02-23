@@ -69,7 +69,7 @@ class EngineWrapper:
                            nodes=cmds.get("nodes"),
                            movetime=movetime)
         return self.search(board, time_limit, ponder, draw_offered)
-    
+
     def offer_draw_or_resign(self, result, board):
         def mate_score_to_score(score):
             if "cp" in score:
@@ -80,7 +80,7 @@ class EngineWrapper:
                     return 10000 - win
                 else:
                     return -10000 - win
-        
+
         if self.draw_or_resign.get("offer_draw_enabled", False) and len(self.scores) >= self.draw_or_resign.get("offer_draw_moves", 5):
             scores = self.scores[-self.draw_or_resign.get("offer_draw_moves", 5):]
             pieces_on_board = len(list(filter(bool, board.board.pieces)))
@@ -115,7 +115,7 @@ class EngineWrapper:
 
     def quit(self):
         pass
-    
+
     def kill_process(self):
         pass
 
@@ -162,7 +162,7 @@ class HubEngine(EngineWrapper):
 
     def quit(self):
         self.engine.quit()
-    
+
     def kill_process(self):
         self.engine.kill_process()
 

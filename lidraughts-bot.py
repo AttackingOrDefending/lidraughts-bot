@@ -21,10 +21,9 @@ from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError
 from urllib3.exceptions import ProtocolError
 from ColorLogger import enable_color_logging
 from collections import defaultdict
+from http.client import RemoteDisconnected
 
 logger = logging.getLogger(__name__)
-
-from http.client import RemoteDisconnected
 
 __version__ = "1.2.0"
 
@@ -185,8 +184,8 @@ def start(li, user_profile, engine_factory, config, logging_level, log_filename,
                     logger.info(f"--- Process Used. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                     pool.apply_async(play_game, [li, game_id, control_queue, engine_factory, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level])
 
-            is_correspondence_ping = event["type"] == "correspondence_ping" 
-            is_local_game_done = event["type"] == "local_game_done" 
+            is_correspondence_ping = event["type"] == "correspondence_ping"
+            is_local_game_done = event["type"] == "local_game_done"
             if (is_correspondence_ping or (is_local_game_done and not wait_for_correspondence_ping)) and not challenge_queue:
                 if is_correspondence_ping and wait_for_correspondence_ping:
                     correspondence_queue.put("")
