@@ -36,7 +36,7 @@ def create_engine(config, variant, initial_time):
     else:
         raise ValueError(
             f"    Invalid engine type: {engine_type}. Expected hub, dxp, cb, or homemade.")
-    options = cfg.get(f"{engine_type}_options", {}) or {}
+    options = cfg.get(f"{engine_type}_options") or {}
     options["variant"] = variant
     options["initial-time"] = initial_time
     return Engine(commands, options, stderr, draw_or_resign, cwd=engine_working_dir)
@@ -46,7 +46,7 @@ class EngineWrapper:
     def __init__(self, options, draw_or_resign):
         self.scores = []
         self.draw_or_resign = draw_or_resign
-        self.go_commands = options.pop("go_commands", {}) or {}
+        self.go_commands = options.pop("go_commands") or {}
         self.last_move_info = {}
 
     def search_for(self, board, movetime, draw_offered):
