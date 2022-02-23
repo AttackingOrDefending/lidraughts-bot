@@ -46,7 +46,7 @@ class EngineWrapper:
     def __init__(self, options, draw_or_resign):
         self.scores = []
         self.draw_or_resign = draw_or_resign
-        self.go_commands = options.pop("go_commands") or {}
+        self.go_commands = options.pop("go_commands", {}) or {}
         self.last_move_info = {}
 
     def search_for(self, board, movetime, draw_offered):
