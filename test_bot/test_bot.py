@@ -59,7 +59,7 @@ if os.path.exists("TEMP"):
 os.mkdir("TEMP")
 download_scan()
 download_kr()
-logging_level = lidraughts_bot.logging.INFO
+logging_level = lidraughts_bot.logging.DEBUG
 lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
 lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
 lidraughts_bot.logger.info("Downloaded engines")
