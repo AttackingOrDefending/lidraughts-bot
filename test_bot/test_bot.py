@@ -78,8 +78,6 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
         is_bot = lidraughts_bot.upgrade_account(li)
 
     if is_bot:
-        engine_factory = lidraughts_bot.partial(lidraughts_bot.engine_wrapper.create_engine, CONFIG)
-
         def run_test():
 
             def thread_for_test():
@@ -169,7 +167,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
 
             thr = threading.Thread(target=thread_for_test)
             thr.start()
-            lidraughts_bot.start(li, user_profile, engine_factory, CONFIG, logging_level, None, one_game=True)
+            lidraughts_bot.start(li, user_profile, CONFIG, logging_level, None, one_game=True)
             thr.join()
 
         run_test()
