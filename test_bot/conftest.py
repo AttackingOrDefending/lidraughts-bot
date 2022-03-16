@@ -14,8 +14,12 @@ def pytest_sessionfinish(session, exitstatus):
     # Engine files
     if os.path.exists("data"):
         shutil.rmtree("data")
-    os.remove("scan.ini")
+    if os.path.exists("scan.ini"):
+        os.remove("scan.ini")
 
-    os.remove("kr_hub.ini")
-    os.remove("KingsRow.odb")
-    os.remove("weights.bin")
+    if os.path.exists("kr_hub.ini"):
+        os.remove("kr_hub.ini")
+    if os.path.exists("KingsRow.odb"):
+        os.remove("KingsRow.odb")
+    if os.path.exists("weights.bin"):
+        os.remove("weights.bin")
