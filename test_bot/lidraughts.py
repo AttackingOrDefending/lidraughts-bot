@@ -44,7 +44,7 @@ class GameStream:
                     moves = state[0]
                     board = draughts.Game()
                     for move in moves.split():
-                        board.push_move(move)
+                        board.push_str_move(move)
                     wtime, btime = state[1].split(",")
                     if len(moves) <= len(self.moves_sent) and not event:
                         time.sleep(0.001)
