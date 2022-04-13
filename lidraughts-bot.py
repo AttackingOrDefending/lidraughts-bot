@@ -296,7 +296,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                 moves_to_get = len(moves) - len(old_moves)
                 if moves_to_get > 0:
                     for move in moves[-moves_to_get:]:
-                        board.push_move(move)
+                        board.push_str_move(move)
                 old_moves = moves
 
                 if not is_game_over(board) and is_engine_move(game, board):
