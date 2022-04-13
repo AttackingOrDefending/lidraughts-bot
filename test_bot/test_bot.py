@@ -115,7 +115,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
                             wtime -= (end_time - start_time) / 1e9
                             wtime += increment
                         for move_part in move.move.li_api_move:
-                            board.push_move(move_part)
+                            board.push_str_move(move_part)
 
                         with open("./logs/states.txt") as states:
                             state = states.read().split("\n")
@@ -136,7 +136,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
                             moves_are_correct = True
                             for move in moves.split():
                                 try:
-                                    temp_board.push_move(move)
+                                    temp_board.push_str_move(move)
                                 except ValueError:
                                     moves_are_correct = False
                             if state != state2 and moves_are_correct:
@@ -151,7 +151,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
                         old_moves = state.split("\n")[0]
                         move = moves[len(old_moves):]
                         for move_part in move.split():
-                            board.push_move(move_part)
+                            board.push_str_move(move_part)
 
                     time.sleep(0.001)
                     with open("./logs/states.txt") as states:
