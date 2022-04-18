@@ -59,7 +59,7 @@ class MinimalEngine(EngineWrapper):
         """
         The method to be implemented in your homemade engine
 
-        NOTE: This method must return an instance of "chess.engine.PlayResult"
+        NOTE: This method must return an instance of "draughts.engine.PlayResult"
         """
         raise NotImplementedError("The search method is not implemented")
 

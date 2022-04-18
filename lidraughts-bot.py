@@ -257,7 +257,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
     engine_cfg = config["engine"]
     ponder_cfg = correspondence_cfg if is_correspondence else engine_cfg
-    can_ponder = ponder_cfg.get("uci_ponder", False) or ponder_cfg.get("ponder", False)
+    can_ponder = ponder_cfg.get("ponder", False)
     move_overhead = config.get("move_overhead", 1000)
     move_overhead_inc = config.get("move_overhead_inc", 100)
     delay_seconds = config.get("rate_limiting_delay", 0)/1000
@@ -271,7 +271,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
     board = draughts.Game(game.variant_name.lower(), game.initial_fen)
     moves, old_moves = [], []
     ponder_thread = None
-    ponder_uci = None
+    ponder_li_one = None
 
     first_move = True
     correspondence_disconnect_time = 0
@@ -316,7 +316,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                     elif is_correspondence:
                         best_move = choose_move_time(engine, board, correspondence_move_time, draw_offered)
                     else:
-                        best_move = get_pondering_results(ponder_thread, ponder_uci, game, board, engine)
+                        best_move = get_pondering_results(ponder_thread, ponder_li_one, game, board, engine)
                         if best_move.move is None:
                             best_move = choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc)
                     move_attempted = True
@@ -324,7 +324,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                         li.resign(game.id)
                     else:
                         li.make_move(game.id, best_move)
-                    ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
+                    ponder_thread, ponder_li_one = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
                 elif is_game_over(board):
                     engine.report_game_result(game, board)
@@ -449,13 +449,13 @@ def start_pondering(engine, board, game, can_ponder, best_move, start_time, move
     return ponder_thread, best_move.ponder.li_one_move
 
 
-def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
+def get_pondering_results(ponder_thread, ponder_li_one, game, board, engine):
     no_move = draughts.engine.PlayResult(None, None)
     if ponder_thread is None:
         return no_move
 
-    move_uci = board.move_stack[-1].li_one_move
-    if ponder_uci == move_uci:
+    move_li_one = board.move_stack[-1].li_one_move
+    if ponder_li_one == move_li_one:
         engine.ponderhit()
         ponder_thread.join()
         return ponder_results[game.id]

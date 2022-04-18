@@ -82,7 +82,7 @@ class Game:
         self.me = self.white if self.is_white else self.black
         self.opponent = self.black if self.is_white else self.white
         self.base_url = base_url
-        self.white_starts = self.initial_fen == "startpos" or self.initial_fen.split()[0] == 'W'
+        self.white_starts = self.initial_fen == "startpos" or self.initial_fen[0] == "W"
         self.abort_at = time.time() + abort_time
         self.terminate_at = time.time() + (self.clock_initial + self.clock_increment) / 1000 + abort_time + 60
         self.disconnect_at = time.time()

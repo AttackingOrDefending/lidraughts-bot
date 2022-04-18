@@ -5,7 +5,7 @@ engine:                      # Engine settings.
   dir: "./engines/"          # Directory containing the engine. This can be an absolute path or one relative to lidraughts-bot/.
   name: "engine_name"        # Binary name of the engine to use.
   engine_argument: "hub"
-  working_dir: "./engines/"  # Directory where the chess engine will read and write files. If blank or missing, the current directory is used.
+  working_dir: "./engines/"  # Directory where the draughts engine will read and write files. If blank or missing, the current directory is used.
   protocol: "hub"            # "hub", "dxp", "cb" (checkerboard) or "strategy"
   ponder: true               # Think on opponent's time.
   draw_or_resign:
@@ -20,11 +20,11 @@ engine:                      # Engine settings.
 #   cpuct: 3.1
   homemade_options:
 #   Hash: 256
-  hub_options:               # Arbitrary UCI options passed to the engine.
+  hub_options:               # Arbitrary Hub options passed to the engine.
     book-ply: 20
     tt-size: 23
     bb-size: 'auto'          # 'auto' changes bb depending on the variant
-#   go_commands:             # Additional options to pass to the UCI go command.
+#   go_commands:             # Additional options to pass to the Hub go command.
 #     nodes: 1               # Search so many nodes only.
 #     depth: 5               # Search depth ply only.
 #     movetime: 1000         # Integer. Search exactly movetime milliseconds.

@@ -68,7 +68,7 @@ Besides the above, there are many possible options within `config.yml` for confi
     3. `"cb"` for the [CheckerBoard](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_reference.htm)
     4. `"homemade"` if you want to write your own engine in Python within lidraughts-bot. See [**Creating a homemade bot**](#creating-a-homemade-bot) below.
 - `ponder`: Specify whether your bot will ponder--i.e., think while the bot's opponent is choosing a move.
-- `draw_or_resign`: This section allows your bot to resign or offer/accept draw based on the evaluation by the engine. XBoard engines can resign and offer/accept draw without this feature enabled.
+- `draw_or_resign`: This section allows your bot to resign or offer/accept draw based on the evaluation by the engine.
     - `resign_enabled`: Whether the bot is allowed to resign based on the evaluation.
     - `resign_score`: The engine evaluation has to be less than or equal to `resign_score` for the bot to resign.
     - `resign_moves`: The evaluation has to be less than or equal to `resign_score` for `resign_moves` amount of moves for the bot to resign.
@@ -103,7 +103,7 @@ Any of the names following `param name=` can be listed in `hub_options` in order
 ```
 The exception to this are the options `variant`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `hub_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't understand the option. The word after `type` indicates the expected type of the options: `string` for a text string, `int` for a numeric value, `bool` for a boolean True/False value.
 
-One last option is `go_commands`. Beneath this option, arguments to the UCI `go` command can be passed. For example,
+One last option is `go_commands`. Beneath this option, arguments to the Hub `level` command can be passed. For example,
 ```yml
   go_commands:
     movetime: 1000
@@ -208,7 +208,7 @@ python3 lidraughts-bot.py -v
 - It may take some time to quit.
 
 ## <a name="creating-a-homemade-bot"></a> Creating a homemade bot
-As an alternative to creating an entire draughts engine and implementing one of the communiciation protocols (`UCI` or `XBoard`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
+As an alternative to creating an entire draughts engine and implementing one of the communiciation protocols (`Hub` or `DXP`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
 
 Steps to create a homemade bot:
 
@@ -216,7 +216,7 @@ Steps to create a homemade bot:
 2. In the `config.yml`, change the engine protocol to `homemade`
 3. Create a class in some file that extends `MinimalEngine` (in `strategies.py`).
     - Look at the `strategies.py` file to see some examples.
-    - If you don't know what to implement, look at the `EngineWrapper` or `UCIEngine` class.
+    - If you don't know what to implement, look at the `EngineWrapper` or `HubEngine` class.
         - You don't have to create your own engine, even though it's an "EngineWrapper" class.<br>
 The examples just implement `search`.
 4. In the `config.yml`, change the name from `engine_name` to the name of your class
