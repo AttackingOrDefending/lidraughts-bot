@@ -1,6 +1,6 @@
 import argparse
 import draughts
-from draughts.engine import PlayResult
+import draughts.engine
 import engine_wrapper
 import model
 import json
@@ -14,6 +14,7 @@ import time
 import backoff
 import sys
 import threading
+import os
 from config import load_config
 from conversation import Conversation, ChatLine
 from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError, ReadTimeout
@@ -148,7 +149,7 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                 chlng = model.Challenge(event["challenge"])
                 if chlng.is_supported(challenge_config):
                     challenge_queue.append(chlng)
-                    if (challenge_config.get("sort_by", "best") == "best"):
+                    if challenge_config.get("sort_by", "best") == "best":
                         list_c = list(challenge_queue)
                         list_c.sort(key=lambda c: -c.score())
                         challenge_queue = list_c
@@ -256,18 +257,19 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
     engine_cfg = config["engine"]
     ponder_cfg = correspondence_cfg if is_correspondence else engine_cfg
-    can_ponder = ponder_cfg.get("ponder", False) and engine_cfg["protocol"] in ["hub", "strategy"]
+    can_ponder = ponder_cfg.get("uci_ponder", False) or ponder_cfg.get("ponder", False)
     move_overhead = config.get("move_overhead", 1000)
     move_overhead_inc = config.get("move_overhead_inc", 100)
     delay_seconds = config.get("rate_limiting_delay", 0)/1000
+
     greeting_cfg = config.get("greeting") or {}
     keyword_map = defaultdict(str, me=game.me.name, opponent=game.opponent.name)
     get_greeting = lambda greeting: str(greeting_cfg.get(greeting) or "").format_map(keyword_map)
     hello = get_greeting("hello")
     goodbye = get_greeting("goodbye")
+
     board = draughts.Game(game.variant_name.lower(), game.initial_fen)
     moves, old_moves = [], []
-
     ponder_thread = None
     ponder_uci = None
 
@@ -289,6 +291,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                 conversation.react(ChatLine(upd), game)
             elif u_type == "gameState":
                 game.state = upd
+
                 start_time = time.perf_counter_ns()
                 if upd["moves"] and len(upd["moves"].split()[-1]) != 4:
                     continue
@@ -307,6 +310,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
                     draw_offered = check_for_draw_offer(game)
+
                     if len(board.move_stack) < 2:
                         best_move = choose_first_move(engine, board, draw_offered)
                     elif is_correspondence:
@@ -316,13 +320,15 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                         if best_move.move is None:
                             best_move = choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc)
                     move_attempted = True
-                    if best_move.resign:
+                    if best_move.resigned and len(board.move_stack) >= 2:
                         li.resign(game.id)
                     else:
                         li.make_move(game.id, best_move)
                     ponder_thread, ponder_uci = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
                 elif is_game_over(board):
+                    engine.report_game_result(game, board)
+                    tell_user_game_result(game, board)
                     conversation.send_message("player", goodbye)
                 elif len(board.move_stack) == 0:
                     correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
@@ -351,9 +357,11 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
     engine.stop()
     engine.quit()
-    if ponder_thread is not None:
-        ponder_thread.join()
-    engine.kill_process()
+
+    try:
+        print_pgn_game_record(li, config, game, board, engine)
+    except Exception as e:
+        logger.warning(f"Error writing game record: {repr(e)}")
 
     if is_correspondence and not is_game_over(board):
         logger.info(f"--- Disconnecting from {game.url()}")
@@ -386,7 +394,9 @@ def choose_move_time(engine, board, search_time, draw_offered):
 
 def choose_first_move(engine, board, draw_offered):
     # need to hardcode first movetime (10000 ms) since Lidraughts has 30 sec limit.
-    return choose_move_time(engine, board, 10000, draw_offered)
+    search_time = 10000
+    logger.info(f"Searching for time {search_time}")
+    return engine.first_search(board, search_time, draw_offered)
 
 
 def choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc):
@@ -440,7 +450,7 @@ def start_pondering(engine, board, game, can_ponder, best_move, start_time, move
 
 
 def get_pondering_results(ponder_thread, ponder_uci, game, board, engine):
-    no_move = PlayResult(None, None)
+    no_move = draughts.engine.PlayResult(None, None)
     if ponder_thread is None:
         return no_move
 
@@ -478,6 +488,59 @@ def is_engine_move(game, board):
 
 def is_game_over(board):
     return board.is_over()
+
+
+def tell_user_game_result(game, board):
+    winner = game.state.get("winner")
+    termination = game.state.get("status")
+
+    winning_name = game.white.name if winner == "white" else game.black.name
+    losing_name = game.white.name if winner == "black" else game.black.name
+
+    if winner is not None:
+        logger.info(f"{winning_name} won!")
+    elif termination == engine_wrapper.Termination.DRAW:
+        logger.info("Game ended in draw.")
+    else:
+        logger.info("Game adjourned.")
+
+    if termination == engine_wrapper.Termination.MATE:
+        logger.info("Game won by checkmate.")
+    elif termination == engine_wrapper.Termination.TIMEOUT:
+        logger.info(f"{losing_name} forfeited on time.")
+    elif termination == engine_wrapper.Termination.RESIGN:
+        logger.info(f"{losing_name} resigned.")
+    elif termination == engine_wrapper.Termination.ABORT:
+        logger.info("Game aborted.")
+    elif termination == engine_wrapper.Termination.DRAW:
+        if board.is_fifty_moves():
+            logger.info("Game drawn by 50-move rule.")
+        elif board.is_repetition():
+            logger.info("Game drawn by threefold repetition.")
+        else:
+            logger.info("Game drawn by agreement.")
+    elif termination:
+        logger.info(f"Game ended by {termination}")
+
+
+def print_pgn_game_record(li, config, game, board, engine):
+    game_directory = config.get("pgn_directory")
+    if not game_directory:
+        return
+
+    try:
+        os.mkdir(game_directory)
+    except FileExistsError:
+        pass
+
+    game_file_name = f"{game.white.name} vs {game.black.name} - {game.id}.pgn"
+    game_file_name = "".join(c for c in game_file_name if c not in '<>:"/\\|?*')
+    game_path = os.path.join(game_directory, game_file_name)
+
+    lidraughts_game_record = li.get_game_pgn(game.id)
+
+    with open(game_path, "w") as game_record_destination:
+        game_record_destination.write(lidraughts_game_record)
 
 
 def intro():

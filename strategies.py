@@ -3,11 +3,10 @@ Some example strategies for people who want to create a custom, homemade bot.
 And some handy classes to extend
 """
 
+import draughts
+from draughts.engine import PlayResult
 import random
 from engine_wrapper import EngineWrapper
-import draughts
-import draughts.engine
-from draughts.engine import PlayResult
 
 
 class FillerEngine:
@@ -59,7 +58,8 @@ class MinimalEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         """
         The method to be implemented in your homemade engine
-        NOTE: This method must return an instance of "draughts.engine.PlayResult"
+
+        NOTE: This method must return an instance of "chess.engine.PlayResult"
         """
         raise NotImplementedError("The search method is not implemented")
 

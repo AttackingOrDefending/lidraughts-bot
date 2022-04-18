@@ -39,7 +39,7 @@ def load_config(config_file):
         if CONFIG["token"] == "xxxxxxxxxxxxxxxx":
             raise Exception("Your config.yml has the default Lidraughts API token. This is probably wrong.")
 
-        if not os.path.isdir(CONFIG["engine"]["dir"]) and CONFIG["engine"]["protocol"] != "homemade":
+        if not os.path.isdir(CONFIG["engine"]["dir"]):
             raise Exception(f'Your engine directory `{CONFIG["engine"]["dir"]}` is not a directory.')
 
         working_dir = CONFIG["engine"].get("working_dir")
