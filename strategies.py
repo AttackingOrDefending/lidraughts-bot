@@ -3,11 +3,10 @@ Some example strategies for people who want to create a custom, homemade bot.
 And some handy classes to extend
 """
 
+import draughts
+from draughts.engine import PlayResult
 import random
 from engine_wrapper import EngineWrapper
-import draughts
-import draughts.engine
-from draughts.engine import PlayResult
 
 
 class FillerEngine:
@@ -59,6 +58,7 @@ class MinimalEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         """
         The method to be implemented in your homemade engine
+
         NOTE: This method must return an instance of "draughts.engine.PlayResult"
         """
         raise NotImplementedError("The search method is not implemented")
@@ -87,37 +87,31 @@ class ExampleEngine(MinimalEngine):
 class RandomMove(ExampleEngine):
     def search(self, board, *args):
         move = random.choice(board.legal_moves()[0])
-        return PlayResult(board.board_to_li_api(move), None)
+        return PlayResult(draughts.Move(board_move=move), None, {})
 
 
 class FirstMoveLidraughts(ExampleEngine):
     """Gets the first move when sorted by lidraughts representation (e.g. 011223)"""
     def search(self, board, *args):
         moves = board.legal_moves()[0]
-        moves = list(map(board.board_to_li_api, moves))
-        moves.sort()
-        return PlayResult(moves[0], None)
+        moves = list(map(lambda board_move: draughts.Move(board_move=board_move), moves))
+        moves.sort(key=lambda move: move.li_one_move)
+        return PlayResult(moves[0], None, {})
 
 
 class FirstMoveHub(ExampleEngine):
     """Gets the first move when sorted by hub representation (e.g. 01x23x7x18)"""
     def search(self, board, *args):
-        moves = board.legal_moves()[0]
-        hub_moves = list(map(board.board_to_hub, moves))
-        hub_to_moves = {}
-        for hub_move, li_move in zip(hub_moves, moves):
-            hub_to_moves[hub_move] = li_move
-        hub_moves.sort()
-        return PlayResult(hub_to_moves[hub_moves[0]], None)
+        moves, captures = board.legal_moves()
+        hub_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures, board_move=board_move), moves))
+        hub_moves.sort(key=lambda move: move.hub_move)
+        return PlayResult(hub_moves[0], None, {})
 
 
 class FirstMovePDN(ExampleEngine):
     """Gets the first move when sorted by PDN representation (e.g. 01x23)"""
     def search(self, board, *args):
-        moves = board.legal_moves()[0]
-        pdn_moves = list(map(board.board_to_pdn, moves))
-        pdn_to_moves = {}
-        for pdn_move, li_move in zip(pdn_moves, moves):
-            pdn_to_moves[pdn_move] = li_move
-        pdn_moves.sort()
-        return PlayResult(pdn_to_moves[pdn_moves[0]], None)
+        moves, captures = board.legal_moves()
+        pdn_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures, board_move=board_move), moves))
+        pdn_moves.sort(key=lambda move: move.pdn_move)
+        return PlayResult(pdn_moves[0], None, {})

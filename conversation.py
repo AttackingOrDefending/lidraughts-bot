@@ -30,7 +30,7 @@ class Conversation:
         elif cmd == "howto":
             self.send_reply(line, "How to run: Check out 'Lidraughts Bot API'")
         elif cmd == "eval" and line.room == "spectator":
-            stats = self.engine.get_stats()
+            stats = self.engine.get_stats(for_chat=True)
             self.send_reply(line, ", ".join(stats))
         elif cmd == "eval":
             self.send_reply(line, "I don't tell that to my opponent, sorry.")

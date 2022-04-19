@@ -3,10 +3,9 @@
 [![Python Test](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-test.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/python-test.yml)
 [![CodeQL](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/AttackingOrDefending/lidraughts-bot/actions/workflows/codeql-analysis.yml)
 
-A bridge between [Lidraughts BOT API](https://lidraughts.org/api#tag/Bot) and bots.
+A bridge between [Lidraughts Bot API](https://lidraughts.org/api#tag/Bot) and bots.
 
 ## How to Install
-
 ### Mac/Linux:
 - **NOTE: Only Python 3.8 or later is supported!**
 - Download the repo into lidraughts-bot directory.
@@ -45,7 +44,7 @@ pip install -r requirements.txt
 - See [here](heroku/README.md)
 
 ## Lidraughts OAuth
-- Create an account for your bot on [Lidraughts.org](https://lidraughts.org/signup)
+- Create an account for your bot on [Lidraughts.org](https://lidraughts.org/signup).
 - **NOTE: If you have previously played games on an existing account, you will not be able to use it as a bot account.**
 - Once your account has been created and you are logged in, [create a personal OAuth2 token with the "Play games with the bot API" ('bot:play') scope](https://lidraughts.org/account/oauth/token/create) selected and a description added.
 - A `token` (e.g. `xxxxxxxxxxxxxxxx`) will be displayed. Store this in the `config.yml` file as the `token` field. You can also set the token in the environment variable `$LIDRAUGHTS_BOT_TOKEN`.
@@ -54,21 +53,22 @@ pip install -r requirements.txt
 ## Setup Engine
 Within the file `config.yml`:
 - Enter the directory containing the engine executable in the `engine: dir` field.
-- Enter the executable name in the `engine: name` field (In Windows you may need to type a name with ".exe", like "scan.exe")
+- Enter the executable name in the `engine: name` field (In Windows you may need to type a name with ".exe", like "lczero.exe")
 - If you want the engine to run in a different directory (e.g., if the engine needs to read or write files at a certain location), enter that directory in the `engine: working_dir` field.
   - If this field is blank or missing, the current directory will be used.
 
-As an optional convenience, there is a folder named `engines` within the lichess-bot folder where you can copy your engine and all the files it needs. This is the default executable location in the `config.yml.default` file.
+As an optional convenience, there is a folder named `engines` within the lidraughts-bot folder where you can copy your engine and all the files it needs. This is the default executable location in the `config.yml.default` file.
 
 ### Engine Configuration
 Besides the above, there are many possible options within `config.yml` for configuring the engine for use with lidraughts-bot.
+
 - `protocol`: Specify which protocol your engine uses. Choices are
     1. `"hub"` for the [Hub](https://github.com/rhalbersma/scan/blob/master/protocol.txt)
     2. `"dxp"` for the [DXP](http://www.mesander.nl/damexchange/edxpmain.htm)
     3. `"cb"` for the [CheckerBoard](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_reference.htm)
     4. `"homemade"` if you want to write your own engine in Python within lidraughts-bot. See [**Creating a homemade bot**](#creating-a-homemade-bot) below.
 - `ponder`: Specify whether your bot will ponder--i.e., think while the bot's opponent is choosing a move.
-- `draw_or_resign`: This section allows your bot to resign or offer/accept draw based on the evaluation by the engine. XBoard engines can resign and offer/accept draw without this feature enabled.
+- `draw_or_resign`: This section allows your bot to resign or offer/accept draw based on the evaluation by the engine.
     - `resign_enabled`: Whether the bot is allowed to resign based on the evaluation.
     - `resign_score`: The engine evaluation has to be less than or equal to `resign_score` for the bot to resign.
     - `resign_moves`: The evaluation has to be less than or equal to `resign_score` for `resign_moves` amount of moves for the bot to resign.
@@ -81,7 +81,7 @@ Besides the above, there are many possible options within `config.yml` for confi
   engine_options:
     cpuct: 3.1
 ```
-This would create the command-line option `--cpuct=3.1` to be used when starting the engine, like this for the engine lc0: `lc0 --cpuct=3.1` (no draughts equivalent). Any number of options can be listed here, each getting their own command-line option.
+This would create the command-line option `--cpuct=3.1` to be used when starting the engine, like this for the engine lc0: `lc0 --cpuct=3.1`. Any number of options can be listed here, each getting their own command-line option.
 - `hub_options`: A list of options to pass to a Hub engine after startup. Different engines have different options, so treat the options in `config.yml.default` as templates and not suggestions. When Hub engines start, they print a list of configurations that can modify their behavior after receiving the string "hub". For example, to find out what options Scan 3.1 supports, run the executable in a terminal, type `hub`, and press Enter. The engine will print the following when run at the command line:
 ```
 id name=Scan version=3.1 author="Fabien Letouzey" country=France
@@ -103,10 +103,10 @@ Any of the names following `param name=` can be listed in `hub_options` in order
 ```
 The exception to this are the options `variant`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `hub_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't understand the option. The word after `type` indicates the expected type of the options: `string` for a text string, `int` for a numeric value, `bool` for a boolean True/False value.
 
-One last option is `go_commands`. Beneath this option, arguments to the Hub `go` command can be passed. For example,
+One last option is `go_commands`. Beneath this option, arguments to the Hub `level` command can be passed. For example,
 ```yml
   go_commands:
-    move-time: 1000
+    movetime: 1000
 ```
 will send `level move-time=1000` to inform the engine on the time it should use.
 
@@ -133,6 +133,8 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
 - `fake_think_time`: Artificially slow down the engine to simulate a person thinking about a move. The amount of thinking time decreases as the game goes on.
 - `rate_limiting_delay`: For extremely fast games, the lidraughts.org servers may respond with an error if too many moves are played to quickly. This option avoids this problem by pausing for a specified number of milliseconds after submitting a move before making the next move.
 - `move_overhead`: To prevent losing on time due to network lag, subtract this many milliseconds from the time to think on each move.
+- `move_overhead_inc`: To prevent losing on time due to network lag, subtract this many milliseconds from the time to think on each move.
+
 
 - `correspondence` These options control how the engine behaves during correspondence games.
   - `move_time`: How many seconds to think for each move.
@@ -149,12 +151,12 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
   - `min_increment`: The minimum value of time increment.
   - `max_base`: The maximum base time for a game.
   - `min_base`: The minimum base time for a game.
-  - `variants`: An indented list of chess variants that the bot can handle.
+  - `variants`: An indented list of draughts variants that the bot can handle.
 ```yml
   variants:
     - standard
-    - fromPosition
-    - breakthrough
+    - frisian
+    - frysk!
     # etc.
 ```
   - `time_controls`: An indented list of acceptable time control types from `bullet` to `correspondence`.
@@ -172,7 +174,7 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
     -rated
     -casual
 ```
-  - `greeting`: Send messages via chat to the bot's opponent. The string `{me}` will be replaced by the bot's lichess account name. The string `{opponent}` will be replaced by the opponent's lichess account name. Any other word between curly brackets will be removed. If you want to put a curly bracket in the message, use two: `{{` or `}}`.
+  - `greeting`: Send messages via chat to the bot's opponent. The string `{me}` will be replaced by the bot's lidraughts account name. The string `{opponent}` will be replaced by the opponent's lidraughts account name. Any other word between curly brackets will be removed. If you want to put a curly bracket in the message, use two: `{{` or `}}`.
     - `hello`: Message to send to opponent before the bot makes its first move.
     - `goodbye`: Message to send to opponent once the game is over.
 ```yml
@@ -180,10 +182,14 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
     hello: Hi, {opponent}! I'm {me}. Good luck!
     goodbye: Good game!
 ```
+  - `pgn_directory`: Write a record of every game played in PGN format to files in this directory. Each bot move will be annotated with the bot's calculated score and principal variation. The score is written with a tag of the form `[%eval s,d]`, where `s` is the score in pawns (positive means white has the advantage), and `d` is the depth of the search. Each game will be written to a uniquely named file.
+```yml
+  pgn_directory: "game_records"
+```
 
 ## Lidraughts Upgrade to Bot Account
 **WARNING: This is irreversible. [Read more about upgrading to bot account](https://lidraughts.org/api#operation/botAccountUpgrade).**
-- run `python3 lichess-bot.py -u`.
+- run `python3 lidraughts-bot.py -u`.
 
 ## To Run
 After activating the virtual environment created in the installation steps (the `source` line for Linux and Macs or the `activate` script for Windows), run
@@ -192,7 +198,7 @@ python3 lidraughts-bot.py
 ```
 The working directory for the engine execution will be the lidraughts-bot directory. If your engine requires files located elsewhere, make sure they are specified by absolute path or copy the files to an appropriate location inside the lidraughts-bot directory.
 
-To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lichess-bot:
+To output more information (including your engine's thinking output and debugging information), the `-v` option can be passed to lidraughts-bot:
 ```
 python3 lidraughts-bot.py -v
 ```
@@ -202,7 +208,7 @@ python3 lidraughts-bot.py -v
 - It may take some time to quit.
 
 ## <a name="creating-a-homemade-bot"></a> Creating a homemade bot
-As an alternative to creating an entire chess engine and implementing one of the communiciation protocols (`Hub`, `DXP` or `CB`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
+As an alternative to creating an entire draughts engine and implementing one of the communiciation protocols (`Hub` or `DXP`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
 
 Steps to create a homemade bot:
 
@@ -229,10 +235,10 @@ Wants=network-online.target
 
 [Service]
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=/usr/bin/python3 /home/AttackingOrDefending/lidraughts-bot/lidraughts-bot.py
-WorkingDirectory=/home/AttackingOrDefending/lidraughts-bot/
-User=AttackingOrDefending
-Group=AttackingOrDefending
+ExecStart=/usr/bin/python3 /home/attackingordefending/lidraughts-bot/lidraughts-bot.py
+WorkingDirectory=/home/attackingordefending/lidraughts-bot/
+User=attackingordefending
+Group=attackingordefending
 Restart=always
 
 [Install]
@@ -240,7 +246,7 @@ WantedBy=multi-user.target
 ```
 
 # Acknowledgements
-Thanks to the Lichess Team for creating a [repository](https://github.com/ShailChoksi/lichess-bot) that could be easily modified to a format that supports Lidraughts. Thanks to [RoepStoep](https://github.com/RoepStoep) for running an [API](https://lidraughts.org/api) to communicate with the BOTs. Thanks to the [AttackingOrDefending](https://github.com/AttackingOrDefending) and his [pydraughts](https://github.com/AttackingOrDefending/pydraughts) code which allows engine communication seamlessly.
+Thanks to the Lichess Team for creating a [repository](https://github.com/ShailChoksi/lichess-bot) that could be easily modified to a format that supports Lidraughts. Thanks to [RoepStoep](https://github.com/RoepStoep) for running an [API](https://lidraughts.org/api) to communicate with the BOTs. Thanks to [AttackingOrDefending](https://github.com/AttackingOrDefending) and his [pydraughts](https://github.com/AttackingOrDefending/pydraughts) code which allows engine communication seamlessly.
 
 # License
 lidraughts-bot is licensed under the AGPLv3 (or any later version at your option). Check out the [LICENSE file](/LICENSE) for the full text.

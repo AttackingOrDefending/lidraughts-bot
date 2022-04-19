@@ -58,9 +58,10 @@ def download_kr():
 if os.path.exists("TEMP"):
     shutil.rmtree("TEMP")
 os.mkdir("TEMP")
-download_scan()
-download_kr()
-logging_level = lidraughts_bot.logging.DEBUG
+if platform == "win32":
+    download_scan()
+    download_kr()
+logging_level = lidraughts_bot.logging.INFO
 lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
 lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
 lidraughts_bot.logger.info("Downloaded engines")
@@ -162,7 +163,8 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
                         file.write(state)
 
                 engine.quit()
-                win = board.is_over() and board.whose_turn() == draughts.WHITE
+                engine.kill_process()
+                win = board.has_player_won(draughts.BLACK) and board.whose_turn() == draughts.WHITE
                 with open("./logs/result.txt", "w") as file:
                     file.write("1" if win else "0")
 
@@ -194,12 +196,15 @@ def test_scan():
     CONFIG["token"] = ""
     CONFIG["engine"]["dir"] = "./TEMP/"
     CONFIG["engine"]["name"] = f"scan{file_extension}"
+    CONFIG["engine"]["working_dir"] = ""
     CONFIG["engine"]["ponder"] = False
+    CONFIG["pgn_directory"] = "TEMP/scan_game_record"
     hub_engine_path = f"./TEMP/kr_hub{file_extension}"
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree("logs")
     lidraughts_bot.logger.info("Finished Testing Scan")
     assert win == "1"
+    assert os.path.isfile(os.path.join(CONFIG["pgn_directory"], "bo vs b - zzzzzzzz.pgn"))
 
 
 @pytest.mark.timeout(150, method="thread")
@@ -222,6 +227,7 @@ def test_homemade():
     CONFIG["token"] = ""
     CONFIG["engine"]["name"] = "Scan"
     CONFIG["engine"]["protocol"] = "homemade"
+    CONFIG["pgn_directory"] = "TEMP/homemade_game_record"
     hub_engine_path = f"./TEMP/kr_hub{file_extension}"
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree("logs")
@@ -229,3 +235,4 @@ def test_homemade():
         file.write(original_strategies)
     lidraughts_bot.logger.info("Finished Testing Homemade")
     assert win == "1"
+    assert os.path.isfile(os.path.join(CONFIG["pgn_directory"], "bo vs b - zzzzzzzz.pgn"))
