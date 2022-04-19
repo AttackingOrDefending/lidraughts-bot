@@ -164,7 +164,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
 
                 engine.quit()
                 engine.kill_process()
-                win = board.has_player_won(2) and board.whose_turn() == draughts.WHITE
+                win = board.has_player_won(draughts.BLACK) and board.whose_turn() == draughts.WHITE
                 with open("./logs/result.txt", "w") as file:
                     file.write("1" if win else "0")
 
