@@ -196,6 +196,7 @@ def test_scan():
     CONFIG["token"] = ""
     CONFIG["engine"]["dir"] = "./TEMP/"
     CONFIG["engine"]["name"] = f"scan{file_extension}"
+    CONFIG["engine"]["working_dir"] = ""
     CONFIG["engine"]["ponder"] = False
     hub_engine_path = f"./TEMP/kr_hub{file_extension}"
     win = run_bot(CONFIG, logging_level, hub_engine_path)
