@@ -216,6 +216,9 @@ class EngineWrapper:
     def kill_process(self):
         self.engine.kill_process()
 
+    def ponderhit(self):
+        pass
+
 
 class HubEngine(EngineWrapper):
     def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):
