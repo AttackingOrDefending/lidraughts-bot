@@ -198,6 +198,7 @@ def test_scan():
     CONFIG["engine"]["name"] = f"scan{file_extension}"
     CONFIG["engine"]["working_dir"] = ""
     CONFIG["engine"]["ponder"] = False
+    CONFIG["pgn_directory"] = "TEMP/scan_game_record"
     hub_engine_path = f"./TEMP/kr_hub{file_extension}"
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree("logs")
@@ -226,6 +227,7 @@ def test_homemade():
     CONFIG["token"] = ""
     CONFIG["engine"]["name"] = "Scan"
     CONFIG["engine"]["protocol"] = "homemade"
+    CONFIG["pgn_directory"] = "TEMP/homemade_game_record"
     hub_engine_path = f"./TEMP/kr_hub{file_extension}"
     win = run_bot(CONFIG, logging_level, hub_engine_path)
     shutil.rmtree("logs")
