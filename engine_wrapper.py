@@ -38,6 +38,7 @@ def create_engine(config, variant, initial_time):
     options = cfg.get(f"{engine_type}_options") or {}
     options["variant"] = variant
     options["initial-time"] = initial_time
+    logger.debug(f"Starting engine: {' '.join(commands)}")
     return Engine(commands, options, stderr, draw_or_resign, cwd=engine_working_dir)
 
 
