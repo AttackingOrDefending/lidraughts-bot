@@ -98,7 +98,7 @@ class EngineWrapper:
 
     def first_search(self, board, movetime, draw_offered):
         # No pondering after the first move since a different clock is used afterwards.
-        return self.search_for(board, movetime, False, draw_offered)
+        return self.search_for(board, movetime, draw_offered)
 
     def search_with_ponder(self, board, wtime, btime, winc, binc, ponder, draw_offered):
         if board.whose_turn() == draughts.WHITE:
