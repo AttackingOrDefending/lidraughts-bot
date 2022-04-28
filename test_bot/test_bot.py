@@ -111,7 +111,7 @@ def run_bot(CONFIG, logging_level, hub_engine_path):
                             move = engine.play(board, draughts.engine.Limit(time=1), ponder=False)
                         else:
                             start_time = time.perf_counter_ns()
-                            move = engine.play(board, draughts.engine.Limit(time=0.001), ponder=False)
+                            move = engine.play(board, draughts.engine.Limit(movetime=0.0001), ponder=False)
                             end_time = time.perf_counter_ns()
                             wtime -= (end_time - start_time) / 1e9
                             wtime += increment
