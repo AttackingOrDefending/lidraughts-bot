@@ -94,17 +94,13 @@ class EngineWrapper:
         self.comment_start_index = None
 
     def search_for(self, board, movetime, draw_offered):
-        return self.search(board, draw_offered.engine.Limit(movetime=movetime // 1000), False, draw_offered)
+        return self.search(board, draughts.engine.Limit(movetime=movetime / 1000), False, draw_offered)
 
     def first_search(self, board, movetime, draw_offered):
         # No pondering after the first move since a different clock is used afterwards.
-        return self.search(board, draughts.engine.Limit(movetime=movetime // 1000), False, draw_offered)
+        return self.search_for(board, movetime, draw_offered)
 
     def search_with_ponder(self, board, wtime, btime, winc, binc, ponder, draw_offered):
-        cmds = self.go_commands
-        movetime = cmds.get("movetime")
-        if movetime is not None:
-            movetime = float(movetime) / 1000
         if board.whose_turn() == draughts.WHITE:
             time = wtime
             inc = winc
@@ -112,11 +108,18 @@ class EngineWrapper:
             time = btime
             inc = binc
         time_limit = draughts.engine.Limit(time=time / 1000,
-                                           inc=inc / 1000,
-                                           depth=cmds.get("depth"),
-                                           nodes=cmds.get("nodes"),
-                                           movetime=movetime)
+                                           inc=inc / 1000)
         return self.search(board, time_limit, ponder, draw_offered)
+
+    def add_go_commands(self, time_limit):
+        movetime = self.go_commands.get("movetime")
+        if movetime is not None:
+            movetime_sec = float(movetime) / 1000
+            if time_limit.movetime is None or time_limit.movetime > movetime_sec:
+                time_limit.movetime = movetime_sec
+        time_limit.depth = self.go_commands.get("depth")
+        time_limit.nodes = self.go_commands.get("nodes")
+        return time_limit
 
     def offer_draw_or_resign(self, result, board):
         def mate_score_to_score(score):
@@ -245,6 +248,7 @@ class HubEngine(EngineWrapper):
         self.engine.init()
 
     def search(self, board, time_limit, ponder, draw_offered):
+        time_limit = self.add_go_commands(time_limit)
         result = self.engine.play(board, time_limit, ponder=ponder)
         return self.process_playresult(board, result)
 
@@ -266,6 +270,7 @@ class DXPEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         if ponder:
             return draughts.engine.PlayResult(None, None)
+        time_limit = self.add_go_commands(time_limit)
         result = self.engine.play(board)
         return self.process_playresult(board, result)
 
@@ -282,6 +287,7 @@ class CBEngine(EngineWrapper):
     def search(self, board, time_limit, ponder, draw_offered):
         if ponder:
             return draughts.engine.PlayResult(None, None)
+        time_limit = self.add_go_commands(time_limit)
         result = self.engine.play(board, time_limit)
         return self.process_playresult(board, result)
 
