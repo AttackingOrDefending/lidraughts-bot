@@ -26,15 +26,15 @@ python3 -m pip install -r requirements.txt
 - [Here is a video on how to install the bot](https://youtu.be/w-aJFk00POQ) (it is for lichess-bot but most steps are the same). Or you may proceed to the following steps.
 - **NOTE: Only Python 3.8 or later is supported!**
 - If you don't have Python, you may [download it here](https://www.python.org/downloads/). When installing it, enable "add Python to PATH", then go to custom installation (this may be not necessary, but on some computers it won't work otherwise) and enable all options (especially "install for all users"), except the last. It's better to install Python in a path without spaces, like "C:\Python\".
-- To type commands it's better to use PowerShell. Go to Start menu and type "PowerShell" (you may use "cmd" too, but sometimes it may not work).
+- To type commands it's better to use PowerShell. Go to the Start menu and type "PowerShell" (you may use "cmd" too, but sometimes it may not work).
 - Then you may need to upgrade pip. Execute `python3 -m pip install --upgrade pip` in PowerShell.
 - Download the repo into lidraughts-bot directory.
-- Navigate to the directory in PowerShell: `cd [folder's adress]` (example, `cd C:\draughts\lidraughts-bot`).
+- Navigate to the directory in PowerShell: `cd [folder's address]` (example, `cd C:\draughts\lidraughts-bot`).
 - Install virtualenv: `pip install virtualenv`.
 - Setup virtualenv:
 ```python
 python3 -m venv .venv # If this fails you probably need to add Python3 to your PATH.
-./.venv/Scripts/Activate.ps1 # `.\.venv\Scripts\activate.bat` should work in cmd in administator mode. This may not work on Windows, and in this case you need to execute "Set-ExecutionPolicy RemoteSigned" first and choose "Y" there (you may need to run Powershell as administrator). After you executed the script, change execution policy back with "Set-ExecutionPolicy Restricted" and pressing "Y".
+./.venv/Scripts/Activate.ps1 # `.\.venv\Scripts\activate.bat` should work in cmd in administrator mode. This may not work on Windows, and in this case you need to execute "Set-ExecutionPolicy RemoteSigned" first and choose "Y" there (you may need to run Powershell as administrator). After you execute the script, change execution policy back with "Set-ExecutionPolicy Restricted" and pressing "Y".
 pip install -r requirements.txt
 ```
 - Copy `config.yml.default` to `config.yml`.
@@ -101,7 +101,7 @@ Any of the names following `param name=` can be listed in `hub_options` in order
     book-ply: 15
     book-margin: 10
 ```
-The exception to this are the options `variant`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `hub_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't understand the option. The word after `type` indicates the expected type of the options: `string` for a text string, `int` for a numeric value, `bool` for a boolean True/False value.
+The exception to this is the option `variant`. These will be handled by lidraughts-bot after a game starts and should not be listed in `config.yml`. Also, if an option is listed under `hub_options` that is not in the list printed by the engine, it will cause an error when the engine starts because the engine won't understand the option. The word after `type` indicates the expected type of the options: `string` for a text string, `int` for a numeric value, `bool` for a boolean True/False value.
 
 One last option is `go_commands`. Beneath this option, arguments to the Hub `level` command can be passed. For example,
 ```yml
@@ -131,7 +131,7 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
 
 - `abort_time`: How many seconds to wait before aborting a game due to opponent inaction. This only applies during the first six moves of the game.
 - `fake_think_time`: Artificially slow down the engine to simulate a person thinking about a move. The amount of thinking time decreases as the game goes on.
-- `rate_limiting_delay`: For extremely fast games, the lidraughts.org servers may respond with an error if too many moves are played to quickly. This option avoids this problem by pausing for a specified number of milliseconds after submitting a move before making the next move.
+- `rate_limiting_delay`: For extremely fast games, the lidraughts.org servers may respond with an error if too many moves are played too quickly. This option avoids this problem by pausing for a specified number of milliseconds after submitting a move before making the next move.
 - `move_overhead`: To prevent losing on time due to network lag, subtract this many milliseconds from the time to think on each move.
 - `move_overhead_inc`: To prevent losing on time due to network lag, subtract this many milliseconds from the time to think on each move.
 
@@ -166,7 +166,7 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
     - blitz
     - rapid
     - classical
-    - correpondence
+    - correspondence
 ```
   - `modes`: An indented list of acceptable game modes (`rated` and/or `casual`).
 ```yml
@@ -175,8 +175,8 @@ See [here](https://github.com/eygilbert/CheckerBoard/blob/master/cb_api_referenc
     -casual
 ```
   - `greeting`: Send messages via chat to the bot's opponent. The string `{me}` will be replaced by the bot's lidraughts account name. The string `{opponent}` will be replaced by the opponent's lidraughts account name. Any other word between curly brackets will be removed. If you want to put a curly bracket in the message, use two: `{{` or `}}`.
-    - `hello`: Message to send to opponent before the bot makes its first move.
-    - `goodbye`: Message to send to opponent once the game is over.
+    - `hello`: Message to send to the opponent before the bot makes its first move.
+    - `goodbye`: Message to send to the opponent once the game is over.
 ```yml
   greeting:
     hello: Hi, {opponent}! I'm {me}. Good luck!
@@ -208,7 +208,7 @@ python3 lidraughts-bot.py -v
 - It may take some time to quit.
 
 ## <a name="creating-a-homemade-bot"></a> Creating a homemade bot
-As an alternative to creating an entire draughts engine and implementing one of the communiciation protocols (`Hub` or `DXP`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
+As an alternative to creating an entire draughts engine and implementing one of the communication protocols (`Hub` or `DXP`), a bot can also be created by writing a single class with a single method. The `search()` method in this new class takes the current board and the game clock as arguments and should return a move based on whatever criteria the coder desires.
 
 Steps to create a homemade bot:
 
