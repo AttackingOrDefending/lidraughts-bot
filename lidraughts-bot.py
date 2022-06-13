@@ -375,7 +375,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 def parse_variant(variant):
     variant = variant.lower()
 
-    if variant in ["standard", "fromposition"]:
+    if variant in ["standard", "from position"]:
         return "normal"
     elif variant == "breakthrough":
         return "bt"
