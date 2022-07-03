@@ -62,8 +62,7 @@ if platform == "win32":
     download_scan()
     download_kr()
 logging_level = lidraughts_bot.logging.INFO
-lidraughts_bot.logging.basicConfig(level=logging_level, filename=None, format="%(asctime)-15s: %(message)s")
-lidraughts_bot.enable_color_logging(debug_lvl=logging_level)
+lidraughts_bot.logging_configurer(logging_level, None)
 lidraughts_bot.logger.info("Downloaded engines")
 
 
