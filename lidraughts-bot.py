@@ -567,8 +567,7 @@ def intro():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Play on Lidraughts with a bot")
     parser.add_argument("-u", action="store_true", help="Upgrade your account to a bot account.")
-    parser.add_argument("-v", action="store_true",
-                        help="Make output more verbose. Include all communication with lichess.org.")
+    parser.add_argument("-v", action="store_true", help="Make output more verbose. Include all communication with lichess.org.")
     parser.add_argument("--config", help="Specify a configuration file (defaults to ./config.yml)")
     parser.add_argument("-l", "--logfile", help="Record all console output to a log file.", default=None)
     args = parser.parse_args()
