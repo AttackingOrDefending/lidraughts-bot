@@ -15,6 +15,7 @@ import sys
 import threading
 import os
 import traceback
+import copy
 from config import load_config
 from conversation import Conversation, ChatLine
 from requests.exceptions import ChunkedEncodingError, ConnectionError, HTTPError, ReadTimeout
@@ -289,6 +290,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
     ponder_li_one = None
 
     first_move = True
+    prior_game = None
     correspondence_disconnect_time = 0
     while not terminated:
         move_attempted = False
@@ -317,7 +319,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                         board.push_str_move(move)
                 old_moves = moves
 
-                if not is_game_over(board) and is_engine_move(game, board):
+                if not is_game_over(board) and is_engine_move(game, prior_game, board):
                     if len(board.move_stack) < 2:
                         conversation.send_message("player", hello)
                     fake_thinking(config, board, game)
@@ -350,8 +352,9 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
                 wb = "w" if board.whose_turn() == draughts.WHITE else "b"
                 game.ping(config.get("abort_time", 20), (upd[f"{wb}time"] + upd[f"{wb}inc"]) / 1000 + 60, correspondence_disconnect_time)
+                prior_game = copy.deepcopy(game)
             elif u_type == "ping":
-                if is_correspondence and not is_engine_move(game, board) and game.should_disconnect_now():
+                if is_correspondence and not is_engine_move(game, prior_game, board) and game.should_disconnect_now():
                     break
                 elif game.should_abort_now():
                     logger.info(f"Aborting {game.url()} by lack of activity")
@@ -497,12 +500,19 @@ def print_move_number(board):
     logger.info(f"move: {len(board.move_stack) // 2 + 1}")
 
 
-def is_engine_move(game, board):
-    return game.is_white == (board.whose_turn() == draughts.WHITE)
+def is_engine_move(game, prior_game, board):
+    return game_changed(game, prior_game) and game.is_white == (board.whose_turn() == draughts.WHITE)
 
 
 def is_game_over(board):
     return board.is_over()
+
+
+def game_changed(current_game, prior_game):
+    if prior_game is None:
+        return True
+
+    return current_game.state["moves"] != prior_game.state["moves"]
 
 
 def tell_user_game_result(game, board):
