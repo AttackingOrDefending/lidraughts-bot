@@ -175,4 +175,4 @@ class Lidraughts:
 [Result "0-1"]
 
 *
-"""                  
+"""
