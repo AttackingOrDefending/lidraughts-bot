@@ -1,7 +1,6 @@
 import os
 import draughts
 import draughts.engine
-import backoff
 import subprocess
 import logging
 from enum import Enum
@@ -9,7 +8,6 @@ from enum import Enum
 logger = logging.getLogger(__name__)
 
 
-@backoff.on_exception(backoff.expo, BaseException, max_time=120)
 def create_engine(config, variant, initial_time):
     cfg = config["engine"]
     engine_path = os.path.join(cfg["dir"], cfg["name"])
