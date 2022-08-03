@@ -110,7 +110,8 @@ class Lidraughts:
         return self.api_post(ENDPOINTS["accept"].format(challenge_id))
 
     def decline_challenge(self, challenge_id, reason="generic"):
-        return self.api_post(ENDPOINTS["decline"].format(challenge_id), data=f"reason={reason}", headers={"Content-Type": "application/x-www-form-urlencoded"})
+        return self.api_post(ENDPOINTS["decline"].format(challenge_id), data=f"reason={reason}",
+                             headers={"Content-Type": "application/x-www-form-urlencoded"})
 
     def get_profile(self):
         profile = self.api_get(ENDPOINTS["profile"])
@@ -129,6 +130,4 @@ class Lidraughts:
         self.session.headers.update(self.header)
 
     def get_game_pgn(self, game_id):
-        return self.api_get(ENDPOINTS["export"].format(game_id),
-                            get_raw_text=True,
-                            params={"literate": "true"})
+        return self.api_get(ENDPOINTS["export"].format(game_id), get_raw_text=True, params={"literate": "true"})

@@ -110,7 +110,7 @@ def game_logging_configurer(queue, level):
 
 
 def game_error_handler(error):
-    logger.error("".join(traceback.format_exception(error)))
+    logger.exception("Game ended due to error:", exc_info=error)
 
 
 def start(li, user_profile, config, logging_level, log_filename, one_game=False):
@@ -124,7 +124,8 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
     control_stream.start()
     correspondence_cfg = config.get("correspondence") or {}
     correspondence_checkin_period = correspondence_cfg.get("checkin_period", 600)
-    correspondence_pinger = multiprocessing.Process(target=do_correspondence_ping, args=[control_queue, correspondence_checkin_period])
+    correspondence_pinger = multiprocessing.Process(target=do_correspondence_ping,
+                                                    args=[control_queue, correspondence_checkin_period])
     correspondence_pinger.start()
     correspondence_queue = manager.Queue()
     correspondence_queue.put("")
@@ -135,8 +136,24 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
     queued_processes = 0
 
     logging_queue = manager.Queue()
-    logging_listener = multiprocessing.Process(target=logging_listener_proc, args=(logging_queue, logging_configurer, logging_level, log_filename))
+    logging_listener = multiprocessing.Process(target=logging_listener_proc,
+                                               args=(logging_queue, logging_configurer, logging_level, log_filename))
     logging_listener.start()
+
+    def log_proc_count(change, queued, used):
+        symbol = "+++" if change == "Freed" else "---"
+        logger.info(f"{symbol} Process {change}. Total Queued: {queued}. Total Used: {used}")
+
+    play_game_args = [li,
+                      None,  # will hold the game id
+                      control_queue,
+                      user_profile,
+                      config,
+                      challenge_queue,
+                      correspondence_queue,
+                      logging_queue,
+                      game_logging_configurer,
+                      logging_level]
 
     with multiprocessing.pool.Pool(max_games + 1) as pool:
         while not terminated:
@@ -158,35 +175,20 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                 break
             elif event["type"] == "local_game_done":
                 busy_processes -= 1
-                logger.info(f"+++ Process Free. Total Queued: {queued_processes}. Total Used: {busy_processes}")
+                log_proc_count("Freed", queued_processes, busy_processes)
                 if one_game:
                     break
             elif event["type"] == "challenge":
                 chlng = model.Challenge(event["challenge"])
-                if chlng.is_supported(challenge_config):
+                is_supported, decline_reason = chlng.is_supported(challenge_config)
+                if is_supported:
                     challenge_queue.append(chlng)
                     if challenge_config.get("sort_by", "best") == "best":
                         list_c = list(challenge_queue)
                         list_c.sort(key=lambda c: -c.score())
                         challenge_queue = list_c
                 else:
-                    try:
-                        reason = "generic"
-                        challenge = config["challenge"]
-                        if not chlng.is_supported_variant(challenge["variants"]):
-                            reason = "variant"
-                        if not chlng.is_supported_time_control(challenge["time_controls"], challenge.get("max_increment", 180), challenge.get("min_increment", 0), challenge.get("max_base", 315360000), challenge.get("min_base", 0)):
-                            reason = "timeControl"
-                        if not chlng.is_supported_mode(challenge["modes"]):
-                            reason = "casual" if chlng.rated else "rated"
-                        if not challenge.get("accept_bot", False) and chlng.challenger_is_bot:
-                            reason = "noBot"
-                        if challenge.get("only_bot", False) and not chlng.challenger_is_bot:
-                            reason = "onlyBot"
-                        li.decline_challenge(chlng.id, reason=reason)
-                        logger.info(f"Decline {chlng} for reason '{reason}'")
-                    except Exception:
-                        pass
+                    li.decline_challenge(chlng.id, reason=decline_reason)
             elif event["type"] == "gameStart":
                 game_id = event["game"]["id"]
                 if game_id in startup_correspondence_games:
@@ -197,8 +199,9 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                     if queued_processes > 0:
                         queued_processes -= 1
                     busy_processes += 1
-                    logger.info(f"--- Process Used. Total Queued: {queued_processes}. Total Used: {busy_processes}")
-                    pool.apply_async(play_game, [li, game_id, control_queue, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level], error_callback=game_error_handler)
+                    log_proc_count("Used", queued_processes, busy_processes)
+                    play_game_args[1] = game_id
+                    pool.apply_async(play_game, play_game_args, error_callback=game_error_handler)
 
             is_correspondence_ping = event["type"] == "correspondence_ping"
             is_local_game_done = event["type"] == "local_game_done"
@@ -218,18 +221,20 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                             break
                     else:
                         busy_processes += 1
-                        logger.info(f"--- Process Used. Total Queued: {queued_processes}. Total Used: {busy_processes}")
-                        pool.apply_async(play_game, [li, game_id, control_queue, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level], error_callback=game_error_handler)
+                        log_proc_count("Used", queued_processes, busy_processes)
+                        play_game_args[1] = game_id
+                        pool.apply_async(play_game, play_game_args, error_callback=game_error_handler)
 
-            while (queued_processes + busy_processes) < max_games and challenge_queue:  # keep processing the queue until empty or max_games is reached
+            # Keep processing the queue until empty or max_games is reached.
+            while (queued_processes + busy_processes) < max_games and challenge_queue:
                 chlng = challenge_queue.pop(0)
                 try:
                     logger.info(f"Accept {chlng}")
                     queued_processes += 1
-                    li.accept_challenge(chlng.id)
+                    log_proc_count("Queued", queued_processes, busy_processes)
                     logger.info(f"--- Process Queue. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                 except (HTTPError, ReadTimeout) as exception:
-                    if isinstance(exception, HTTPError) and exception.response.status_code == 404:  # ignore missing challenge
+                    if isinstance(exception, HTTPError) and exception.response.status_code == 404:
                         logger.info(f"Skip missing {chlng}")
                     queued_processes -= 1
 
@@ -248,7 +253,16 @@ ponder_results = {}
 
 
 @backoff.on_exception(backoff.expo, BaseException, max_time=600, giveup=is_final)
-def play_game(li, game_id, control_queue, user_profile, config, challenge_queue, correspondence_queue, logging_queue, game_logging_configurer, logging_level):
+def play_game(li,
+              game_id,
+              control_queue,
+              user_profile,
+              config,
+              challenge_queue,
+              correspondence_queue,
+              logging_queue,
+              game_logging_configurer,
+              logging_level):
     game_logging_configurer(logging_queue, logging_level)
     logger = logging.getLogger(__name__)
 
@@ -258,7 +272,8 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
     # Initial response of stream will be the full game info. Store it
     initial_state = json.loads(next(lines).decode("utf-8"))
     logger.debug(f"Initial state: {initial_state}")
-    game = model.Game(initial_state, user_profile["username"], li.baseUrl, config.get("abort_time", 20))
+    abort_time = config.get("abort_time", 20)
+    game = model.Game(initial_state, user_profile["username"], li.baseUrl, abort_time)
 
     initial_time = (game.state["wtime"] if game.my_color == "white" else game.state["btime"]) / 1000
     variant = parse_variant(game.variant_name)
@@ -270,6 +285,7 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
     is_correspondence = game.perf_name == "Correspondence"
     correspondence_cfg = config.get("correspondence") or {}
     correspondence_move_time = correspondence_cfg.get("move_time", 60) * 1000
+    correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
     engine_cfg = config["engine"]
     ponder_cfg = correspondence_cfg if is_correspondence else engine_cfg
@@ -280,7 +296,9 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
     greeting_cfg = config.get("greeting") or {}
     keyword_map = defaultdict(str, me=game.me.name, opponent=game.opponent.name)
-    get_greeting = lambda greeting: str(greeting_cfg.get(greeting) or "").format_map(keyword_map)
+
+    def get_greeting(greeting):
+        return str(greeting_cfg.get(greeting) or "").format_map(keyword_map)
     hello = get_greeting("hello")
     goodbye = get_greeting("goodbye")
 
@@ -290,8 +308,8 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
     ponder_li_one = None
 
     first_move = True
+    disconnect_time = 0
     prior_game = None
-    correspondence_disconnect_time = 0
     while not terminated:
         move_attempted = False
         try:
@@ -319,12 +337,15 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                         board.push_str_move(move)
                 old_moves = moves
 
+                if len(board.move_stack) == 0:
+                    disconnect_time = correspondence_disconnect_time
+
                 if not is_game_over(board) and is_engine_move(game, prior_game, board):
+                    disconnect_time = correspondence_disconnect_time
                     if len(board.move_stack) < 2:
                         conversation.send_message("player", hello)
                     fake_thinking(config, board, game)
                     print_move_number(board)
-                    correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
                     draw_offered = check_for_draw_offer(game)
 
@@ -335,7 +356,8 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                     else:
                         best_move = get_pondering_results(ponder_thread, ponder_li_one, game, board, engine)
                         if best_move.move is None:
-                            best_move = choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc)
+                            best_move = choose_move(engine, board, game, draw_offered, start_time, move_overhead,
+                                                    move_overhead_inc)
                     move_attempted = True
                     if best_move.resigned and len(board.move_stack) >= 2:
                         li.resign(game.id)
@@ -347,11 +369,10 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
                     engine.report_game_result(game, board)
                     tell_user_game_result(game, board)
                     conversation.send_message("player", goodbye)
-                elif len(board.move_stack) == 0:
-                    correspondence_disconnect_time = correspondence_cfg.get("disconnect_time", 300)
 
                 wb = "w" if board.whose_turn() == draughts.WHITE else "b"
-                game.ping(config.get("abort_time", 20), (upd[f"{wb}time"] + upd[f"{wb}inc"]) / 1000 + 60, correspondence_disconnect_time)
+                terminate_time = (upd[f"{wb}time"] + upd[f"{wb}inc"]) / 1000 + 60
+                game.ping(abort_time, terminate_time, disconnect_time)
                 prior_game = copy.deepcopy(game)
             elif u_type == "ping":
                 if is_correspondence and not is_engine_move(game, prior_game, board) and game.should_disconnect_now():
@@ -378,8 +399,8 @@ def play_game(li, game_id, control_queue, user_profile, config, challenge_queue,
 
     try:
         print_pgn_game_record(li, config, game, board, engine)
-    except Exception as e:
-        logger.warning(f"Error writing game record: {repr(e)}")
+    except Exception:
+        logger.exception("Error writing game record:")
 
     if is_correspondence and not is_game_over(board):
         logger.info(f"--- Disconnecting from {game.url()}")
@@ -418,20 +439,14 @@ def choose_first_move(engine, board, draw_offered):
 
 
 def choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc):
-    wtime = game.state["wtime"]
-    btime = game.state["btime"]
-    winc = game.state["winc"]
-    binc = game.state["binc"]
-    pre_move_time = int((time.perf_counter_ns() - start_time) / 1000000)
-    if board.whose_turn() == draughts.WHITE:
-        wtime = max(0, wtime - move_overhead - pre_move_time)
-        winc = max(0, winc - move_overhead_inc)
-    else:
-        btime = max(0, btime - move_overhead - pre_move_time)
-        binc = max(0, binc - move_overhead_inc)
-
-    logger.info(f"Searching for wtime {wtime} btime {btime}")
-    return engine.search_with_ponder(board, wtime, btime, winc, binc, False, draw_offered)
+    pre_move_time = int((time.perf_counter_ns() - start_time) / 1e6)
+    overhead = pre_move_time + move_overhead
+    wb = "w" if board.whose_turn() == draughts.WHITE else "b"
+    game.state[f"{wb}time"] = max(0, game.state[f"{wb}time"] - overhead)
+    game.state[f"{wb}inc"] = max(0, game.state[f"{wb}inc"] - move_overhead_inc)
+    logger.info("Searching for wtime {wtime} btime {btime}".format_map(game.state))
+    return engine.search_with_ponder(board, game.state["wtime"], game.state["btime"], game.state["winc"],
+                                     game.state["binc"], False, draw_offered)
 
 
 def start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc):
@@ -569,13 +584,13 @@ def print_pgn_game_record(li, config, game, board, engine):
 
 
 def intro():
-    return r"""
+    return fr"""
     .   _/|
     .  // o\
-    .  || ._)  lidraughts-bot %s
+    .  || ._)  lidraughts-bot {__version__}
     .  //__\
     .  )___(   Play on Lidraughts with a bot
-    """ % __version__
+    """
 
 
 def start_lichess_bot():
@@ -609,6 +624,5 @@ def start_lichess_bot():
 if __name__ == "__main__":
     try:
         start_lichess_bot()
-    except Exception as error:
-        logger.error(error)
-        logger.error(game_error_handler(error))
+    except Exception:
+        logger.exception("Quitting lichess-bot due to an error:")

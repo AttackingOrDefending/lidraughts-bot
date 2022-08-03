@@ -19,6 +19,7 @@ lidraughts_bot = importlib.import_module("lidraughts-bot")
 
 platform = sys.platform
 file_extension = ".exe" if platform == "win32" else ""
+hub_engine_path = f"./TEMP/kr_hub{file_extension}"
 
 
 def download_scan():
@@ -44,7 +45,8 @@ def download_scan():
 
 def download_kr():
     headers = {'User-Agent': 'User Agent', 'From': 'mail@mail.com'}
-    response = requests.get("http://edgilbert.org/InternationalDraughts/downloads/kr_hub_163.zip", headers=headers, allow_redirects=True)
+    response = requests.get("http://edgilbert.org/InternationalDraughts/downloads/kr_hub_163.zip",
+                            headers=headers, allow_redirects=True)
     with open("./TEMP/kr_zip.zip", "wb") as file:
         file.write(response.content)
     with zipfile.ZipFile("./TEMP/kr_zip.zip", "r") as zip_ref:
@@ -65,7 +67,7 @@ lidraughts_bot.logging_configurer(logging_level, None)
 lidraughts_bot.logger.info("Downloaded engines")
 
 
-def run_bot(CONFIG, logging_level, hub_engine_path):
+def run_bot(CONFIG, logging_level):
     lidraughts_bot.logger.info(lidraughts_bot.intro())
     li = lidraughts_bot.lidraughts.Lidraughts(CONFIG["token"], CONFIG["url"], lidraughts_bot.__version__)
 
@@ -197,8 +199,7 @@ def test_scan():
     CONFIG["engine"]["working_dir"] = ""
     CONFIG["engine"]["ponder"] = False
     CONFIG["pgn_directory"] = "TEMP/scan_game_record"
-    hub_engine_path = f"./TEMP/kr_hub{file_extension}"
-    win = run_bot(CONFIG, logging_level, hub_engine_path)
+    win = run_bot(CONFIG, logging_level)
     shutil.rmtree("logs")
     lidraughts_bot.logger.info("Finished Testing Scan")
     assert win == "1"
@@ -211,18 +212,16 @@ def test_homemade():
         assert True
         return
     with open("strategies.py") as file:
-        strategies = file.read()
-        original_strategies = strategies
-        strategies = strategies.split("\n")
-    strategies += ["class Scan(ExampleEngine):",
-                   "    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):",
-                   "        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)",
-                   f"        self.engine = draughts.engine.HubEngine(['./TEMP/scan{file_extension}', 'hub'])",
-                   "        self.engine.init()",
-                   "    def search(self, board, time_limit, *args):",
-                   "        return self.engine.play(board, time_limit, False)"]
-    with open("strategies.py", "w") as file:
-        file.write("\n".join(strategies))
+        original_strategies = file.read()
+    with open("strategies.py", "a") as file:
+        file.write(f"""
+class Scan(ExampleEngine):
+    def __init__(self, commands, options, stderr, draw_or_resign, **popen_args):
+        super().__init__(commands, options, stderr, draw_or_resign, **popen_args)
+        self.engine = draughts.engine.HubEngine(['./TEMP/scan{file_extension}', 'hub'])
+        self.engine.init()
+    def search(self, board, time_limit, *args):
+        return self.engine.play(board, time_limit, False)""")
     if os.path.exists("logs"):
         shutil.rmtree("logs")
     os.mkdir("logs")
@@ -232,8 +231,7 @@ def test_homemade():
     CONFIG["engine"]["name"] = "Scan"
     CONFIG["engine"]["protocol"] = "homemade"
     CONFIG["pgn_directory"] = "TEMP/homemade_game_record"
-    hub_engine_path = f"./TEMP/kr_hub{file_extension}"
-    win = run_bot(CONFIG, logging_level, hub_engine_path)
+    win = run_bot(CONFIG, logging_level)
     shutil.rmtree("logs")
     with open("strategies.py", "w") as file:
         file.write(original_strategies)
