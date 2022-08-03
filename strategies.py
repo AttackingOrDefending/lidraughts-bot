@@ -103,7 +103,8 @@ class FirstMoveHub(ExampleEngine):
     """Gets the first move when sorted by hub representation (e.g. 01x23x7x18)"""
     def search(self, board, *args):
         moves, captures = board.legal_moves()
-        hub_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures, board_move=board_move), moves))
+        hub_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures,
+                                                              board_move=board_move), moves))
         hub_moves.sort(key=lambda move: move.hub_move)
         return PlayResult(hub_moves[0], None, {})
 
@@ -112,6 +113,7 @@ class FirstMovePDN(ExampleEngine):
     """Gets the first move when sorted by PDN representation (e.g. 01x23)"""
     def search(self, board, *args):
         moves, captures = board.legal_moves()
-        pdn_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures, board_move=board_move), moves))
+        pdn_moves = list(map(lambda board_move: draughts.Move(possible_moves=moves, possible_captures=captures,
+                                                              board_move=board_move), moves))
         pdn_moves.sort(key=lambda move: move.pdn_move)
         return PlayResult(pdn_moves[0], None, {})
