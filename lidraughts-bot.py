@@ -14,7 +14,6 @@ import backoff
 import sys
 import threading
 import os
-import traceback
 import copy
 from config import load_config
 from conversation import Conversation, ChatLine
@@ -168,7 +167,8 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                 logger.warning("Unable to handle response from lidraughts.org:")
                 logger.warning(event)
                 if event.get("error") == "Missing scope":
-                    logger.warning('Please check that the API access token for your bot has the scope "Play games with the bot API".')
+                    logger.warning('Please check that the API access token for your bot has the scope "Play games with the bot'
+                                   ' API".')
                 continue
 
             if event["type"] == "terminated":
@@ -363,7 +363,8 @@ def play_game(li,
                         li.resign(game.id)
                     else:
                         li.make_move(game.id, best_move)
-                    ponder_thread, ponder_li_one = start_pondering(engine, board, game, can_ponder, best_move, start_time, move_overhead, move_overhead_inc)
+                    ponder_thread, ponder_li_one = start_pondering(engine, board, game, can_ponder, best_move,
+                                                                   start_time, move_overhead, move_overhead_inc)
                     time.sleep(delay_seconds)
                 elif is_game_over(board):
                     engine.report_game_result(game, board)
@@ -596,7 +597,7 @@ def intro():
 def start_lichess_bot():
     parser = argparse.ArgumentParser(description="Play on Lidraughts with a bot")
     parser.add_argument("-u", action="store_true", help="Upgrade your account to a bot account.")
-    parser.add_argument("-v", action="store_true", help="Make output more verbose. Include all communication with lichess.org.")
+    parser.add_argument("-v", action="store_true", help="Make output more verbose. Include all communication with lichess.")
     parser.add_argument("--config", help="Specify a configuration file (defaults to ./config.yml)")
     parser.add_argument("-l", "--logfile", help="Record all console output to a log file.", default=None)
     args = parser.parse_args()
