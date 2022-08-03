@@ -441,7 +441,7 @@ def choose_first_move(engine, board, draw_offered):
 def choose_move(engine, board, game, draw_offered, start_time, move_overhead, move_overhead_inc):
     pre_move_time = int((time.perf_counter_ns() - start_time) / 1e6)
     overhead = pre_move_time + move_overhead
-    wb = "w" if board.turn == draughts.WHITE else "b"
+    wb = "w" if board.whose_turn() == draughts.WHITE else "b"
     game.state[f"{wb}time"] = max(0, game.state[f"{wb}time"] - overhead)
     game.state[f"{wb}inc"] = max(0, game.state[f"{wb}inc"] - move_overhead_inc)
     logger.info("Searching for wtime {wtime} btime {btime}".format_map(game.state))
