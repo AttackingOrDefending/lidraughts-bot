@@ -120,7 +120,7 @@ class EngineWrapper:
         return time_limit
 
     def offer_draw_or_resign(self, result, board):
-        def mate_score_to_score(score):
+        def actual(score):
             if "cp" in score:
                 return score.get("cp", float("nan"))
             else:
@@ -130,16 +130,26 @@ class EngineWrapper:
                 else:
                     return -10000 - win
 
-        if self.draw_or_resign.get("offer_draw_enabled", False) and len(self.scores) >= self.draw_or_resign.get("offer_draw_moves", 5):
-            scores = self.scores[-self.draw_or_resign.get("offer_draw_moves", 5):]
-            pieces_on_board = len(board.board.pieces)
-            scores_near_draw = lambda score: abs(mate_score_to_score(score)) <= self.draw_or_resign.get("offer_draw_score", 0)
-            if len(scores) == len(list(filter(scores_near_draw, scores))) and pieces_on_board <= self.draw_or_resign.get("offer_draw_pieces", 10):
+        can_offer_draw = self.draw_or_resign.get("offer_draw_enabled", False)
+        draw_offer_moves = self.draw_or_resign.get("offer_draw_moves", 5)
+        draw_score_range = self.draw_or_resign.get("offer_draw_score", 0)
+        draw_max_piece_count = self.draw_or_resign.get("offer_draw_pieces", 10)
+        pieces_on_board = len(board.board.pieces)
+        enough_pieces_captured = pieces_on_board <= draw_max_piece_count
+
+        if can_offer_draw and len(self.scores) >= draw_offer_moves and enough_pieces_captured:
+            scores = self.scores[-draw_offer_moves:]
+            scores_near_draw = lambda score: abs(actual(score)) <= draw_score_range
+            if len(scores) == len(list(filter(scores_near_draw, scores))):
                 result.draw_offered = True
 
-        if self.draw_or_resign.get("resign_enabled", False) and len(self.scores) >= self.draw_or_resign.get("resign_moves", 3):
-            scores = self.scores[-self.draw_or_resign.get("resign_moves", 3):]
-            scores_near_loss = lambda score: abs(mate_score_to_score(score)) <= self.draw_or_resign.get("resign_score", -1000)
+        resign_enabled = self.draw_or_resign.get("resign_enabled", False)
+        min_moves_for_resign = self.draw_or_resign.get("resign_moves", 3)
+        resign_score = self.draw_or_resign.get("resign_score", -1000)
+
+        if resign_enabled and len(self.scores) >= min_moves_for_resign:
+            scores = self.scores[-min_moves_for_resign:]
+            scores_near_loss = lambda score: actual(score) <= resign_score
             if len(scores) == len(list(filter(scores_near_loss, scores))):
                 result.resigned = True
         return result
@@ -180,7 +190,7 @@ class EngineWrapper:
 
     def print_stats(self):
         for line in self.get_stats():
-            logger.info(f"{line}")
+            logger.info(line)
 
     def get_stats(self, for_chat=False):
         info = self.last_move_info.copy()
