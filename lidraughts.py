@@ -19,7 +19,8 @@ ENDPOINTS = {
     "decline": "/api/challenge/{}/decline",
     "upgrade": "/api/bot/account/upgrade",
     "resign": "/api/bot/game/{}/resign",
-    "export": "/game/export/{}"
+    "export": "/game/export/{}",
+    "status": "/api/users/status"
 }
 
 
@@ -131,3 +132,12 @@ class Lidraughts:
 
     def get_game_pgn(self, game_id):
         return self.api_get(ENDPOINTS["export"].format(game_id), get_raw_text=True, params={"literate": "true"})
+
+    def is_online(self, user_id):
+        user = self.api_get(ENDPOINTS["status"], params={"ids": user_id})
+        return user and user[0].get("online")
+
+    def reset_connection(self):
+        self.session.close()
+        self.session = requests.Session()
+        self.session.headers.update(self.header)
