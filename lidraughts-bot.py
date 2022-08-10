@@ -130,6 +130,7 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
     correspondence_queue.put("")
     startup_correspondence_games = [game["gameId"] for game in li.get_ongoing_games() if game["perf"] == "correspondence"]
     wait_for_correspondence_ping = False
+    last_check_online_time = time.time()
 
     busy_processes = 0
     queued_processes = 0
@@ -237,6 +238,12 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                     if isinstance(exception, HTTPError) and exception.response.status_code == 404:
                         logger.info(f"Skip missing {chlng}")
                     queued_processes -= 1
+
+            if time.time() > last_check_online_time + 60 * 60:  # 1 hour.
+                if not li.is_online(user_profile["id"]):
+                    logger.info("Will reset connection with lichess")
+                    li.reset_connection()
+                last_check_online_time = time.time()
 
             control_queue.task_done()
 
