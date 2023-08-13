@@ -232,8 +232,8 @@ def start(li, user_profile, config, logging_level, log_filename, one_game=False)
                 try:
                     logger.info(f"Accept {chlng}")
                     queued_processes += 1
+                    li.accept_challenge(chlng.id)
                     log_proc_count("Queued", queued_processes, busy_processes)
-                    logger.info(f"--- Process Queue. Total Queued: {queued_processes}. Total Used: {busy_processes}")
                 except (HTTPError, ReadTimeout) as exception:
                     if isinstance(exception, HTTPError) and exception.response.status_code == 404:
                         logger.info(f"Skip missing {chlng}")
