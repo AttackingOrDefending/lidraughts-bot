@@ -6,4 +6,4 @@ rich==13.9.4
 
 # Requirements for tests
 pytest==8.3.5
-pytest-timeout==2.3.1
+pytest-timeout==2.4.0
