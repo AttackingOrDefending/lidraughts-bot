@@ -1,6 +1,6 @@
 pydraughts==0.5.7
 PyYAML>=5.4.1
-requests>=2.25.1
+requests>=2.34.2
 backoff==2.2.1
 rich==14.2.0
 
